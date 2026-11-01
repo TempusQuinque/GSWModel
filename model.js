@@ -61,7 +61,7 @@ const START = { gMen: 3300, gTanks: 3600, gAir: 2800, sMen: 2900, sTanks: 22600,
 const LEVERS_REAL = {
   label: 'Reality', start: '1941-06-22', gMen: 3300, gTanks: 3600, gAirX: 1.0, lorries: 1.0, fuel: 1.0, railX: 1.0,
   sMen: 2900, alert: 0, lendLease: true, farEastHeld: 0, gProdX: 1.0, gReplX: 1.0, sProdX: 1.0,
-  kievDiversion: true, moscowKm: 1080, moscow42: false, moscowDef: 0.65, blueStart: '1942-07', supplyLimit: true, caucShare: 0.75,   // share of the south's supply reach given to the Caucasus (Directive No. 45 split the effort)
+  kievDiversion: true, moscowKm: 1080, moscow42: false, moscowDef: 0.65, blueStart: '1942-07', supplyLimit: true, caucShare: 0.75, sEff: 1.0,   // share of the south's supply reach given to the Caucasus (Directive No. 45 split the effort)
   stavka41: 'south', stavka42: 'moscow',     // where the Stavka keeps its weight: 1941 the Kiev group of fronts (as in reality), 1942 before Moscow (as in reality)
   sovDepth: false, kievWithdraw: false, winterLimited: false, noKharkov: false,
 };
@@ -135,7 +135,8 @@ function run(L, p) {
     const seasonOf = a => (a === 'S' && K.seasonS[m] != null) ? K.seasonS[m] : season;
     const sMen0 = S.men;
     const gP = comp(G.men / 3300, G.tanks / 3600, G.air / 2800, GWT);
-    const sP = comp(S.men / 2900, Math.max(0.05, S.tanks / 22600), Math.max(0.05, S.air / 20000), SWT);
+    const sEff = L.sEff || 1;   // the fighting value of the Soviet forces per man, tank and aircraft, relative to 1941–42 (about 1.5 for the army of 1944)
+    const sP = comp(S.men / 2900, Math.max(0.05, S.tanks / 22600), Math.max(0.05, S.air / 20000), SWT) * sEff;
     const FR = gP / sP;
     // the Stavka's weight between the axes, relative to reality (1941: the south; 1942: Moscow); a lighter axis is easier to attack
     const real41 = { N: 0.2, C: 0.4, S: 0.4 }, real42 = { N: 0.15, C: 0.5, S: 0.35 };
@@ -218,7 +219,7 @@ function run(L, p) {
     const sealLever = Math.pow(L.gMen / 3300, 0.4) * Math.pow(L.gAirX, 0.15);                 // the premise's extra men and aircraft
     const sealWear = Math.pow((G.men / 3300) / (L.gMen / 3300), 0.4);                          // the attrition since, as in reality
     const advWw = AXES.reduce((acc, a) => acc + adv[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);   // the men standing on each axis
-    let pris = K.pockets * S.men * (advWw / 400) * forward * sealWear * Math.pow(sealLever * (L.sovDepth && t <= 2 ? 0.7 : 1) / leak, p.pocketE);
+    let pris = K.pockets * S.men * (advWw / 400) * forward * sealWear * Math.pow(sealLever * (L.sovDepth && t <= 2 ? 0.7 : 1) / leak, p.pocketE) / Math.sqrt(sEff);   // better-led troops get more of themselves out of a pocket
     if (m === '1941-09' && L.kievWithdraw) pris *= 0.45;
     if (m === '1941-09' && !L.kievDiversion) pris *= 0.6;                            // no northern pincer: the Kiev pocket is far smaller
     if (m === '1942-05' && sovOff) pris += 240 * Math.pow(G.men / 3300, 0.5);          // the Kharkov offensive cut off at Izyum
