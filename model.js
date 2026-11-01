@@ -16,7 +16,7 @@ const MILES = {   // km from the frontier of June 1941 along each axis (the mode
   C: [['Minsk', 330], ['Smolensk', 640], ['Vyazma', 870], ['Moscow', 1080]],
   S: [['Kiev', 450], ['Kharkov', 750], ['Rostov', 1000], ['Voronezh', 1150], ['Stalingrad', 1500], ['Astrakhan', 1750]],
 };
-const CAUC = [['Maikop', 300], ['Mozdok', 540], ['Grozny', 650], ['Baku', 1000]];   // the Caucasus branch, km beyond Rostov
+const CAUC = [['Maikop', 300], ['Mozdok', 540], ['Grozny', 650], ['Derbent', 800], ['Baku', 1000]];   // the Caucasus branch, km beyond Rostov
 
 // ------------------------------------------------------------------ calibrated constants (the real war)
 const K = {
@@ -37,6 +37,8 @@ const K = {
   seasonS: { '1941-10': 0.334, '1941-11': 0.662 },   // the south's mud came later and lighter
   capN: 950,                              // Leningrad is invested, not stormed: the northern axis ends at Tikhvin
   sCas42X: 2.600, gCas42X: 0.632,            // 1942: the Red Army attacked for much of the year, at its own cost
+  astrPace: 400, astrFlank: 0.1,   // the Astrakhan dash: km a month in dry weather for a motorized group; the share of the southern striking force it takes off the Don flank
+  caucW: { '1942-10': 0.8, '1942-11': 0.5, '1942-12': 0.15 }, caucL: { '1942-10': 1, '1942-11': 0.6, '1942-12': 0.3 },   // lorry reach in the Caucasus by month   // the Caucasus' own weather once the branch has the south's whole effort
   caucShare: 0.75,                        // share of the southern supply reach that the Caucasus branch can use
   mosDef41: { '1941-08': 0.25, '1941-09': 0.250, '1941-10': 0.119, '1941-11': 0.566 },   // Aug-Sep: the Reserve Front on the Rzhev-Vyazma line and Timoshenko's counter-attacks (not calibrated: the real Centre did not attack then)   // the Moscow defence zone and the reserve armies forming before the capital, by calendar month
   offFront: 0.26, mozhaisk: 930, offFront41: 0.22,   // the Mozhaisk line, km; the pace beyond it relative to open country                         // a set-piece offensive against a continuous front moves at this share of the open pace
@@ -52,14 +54,14 @@ const START = { gMen: 3300, gTanks: 3600, gAir: 2800, sMen: 2900, sTanks: 22600,
 const LEVERS_REAL = {
   label: 'Reality', start: '1941-06-22', gMen: 3300, gTanks: 3600, gAirX: 1.0, lorries: 1.0, fuel: 1.0, railX: 1.0,
   sMen: 2900, alert: 0, lendLease: true, farEastHeld: 0, gProdX: 1.0, gReplX: 1.0, sProdX: 1.0,
-  kievDiversion: true, moscowKm: 1080, moscow42: false, moscowDef: 0.65, blueStart: '1942-07', supplyLimit: true,
+  kievDiversion: true, moscowKm: 1080, moscow42: false, moscowDef: 0.65, blueStart: '1942-07', supplyLimit: true, caucShare: 0.75,   // share of the south's supply reach given to the Caucasus (Directive No. 45 split the effort)
   stavka41: 'south', stavka42: 'moscow',     // where the Stavka keeps its weight: 1941 the Kiev group of fronts (as in reality), 1942 before Moscow (as in reality)
   sovDepth: false, kievWithdraw: false, winterLimited: false, noKharkov: false,
 };
 const LEVERS_SCEN = Object.assign({}, LEVERS_REAL, {
   label: 'Scenario', start: '1941-06-01', gMen: 3900, gTanks: 3800, gAirX: 1.5, lorries: 1.1, fuel: 1.05, railX: 1.0,   // net of what the extra divisions and aircraft consume
   sMen: 3700, alert: 1, lendLease: false, farEastHeld: 0.5, gProdX: 1.3, gReplX: 1.25, sProdX: 0.96,
-  kievDiversion: true, moscow42: true, moscowDef: 0.65, blueStart: 'after Moscow',
+  kievDiversion: true, moscow42: true, moscowDef: 0.65, blueStart: 'after Moscow', caucShare: 0.85,   // the article has Grozny on 24 Sept.: the Caucasus took a larger share of the south's effort than in reality
 });
 
 // ------------------------------------------------------------------ uncertain mechanisms, [low, high]: multipliers around the calibration
@@ -82,6 +84,8 @@ const PRIORS = {
   stalX: [0.85, 1.35],        // pressure needed at Stalingrad, relative to the real; below 1 the city would have fallen even in reality          // pressure needed at Stalingrad, relative to the real (which did not suffice)
   uranusX: [0.75, 1.3],      // reserve ratio needed for the November counter-offensive, relative to the real (which sufficed)
   culm: [1.0, 2.0],
+  astr: [0.7, 1.3],           // the dash for Astrakhan after Stalingrad: pace of the motorized group across the Kalmyk steppe, relative to the calibrated
+  steppeNov: [0.4, 0.8],      // November on the steppe: how much of the lorry reach and pace survive the rains and the first frost
   hub: [0.5, 0.8],            // Moscow as the railway hub: the share of the Stavka's capacity to move reserves between theatres that survives its fall (eleven trunk lines met there; the Volga bypass lines were fewer and slower); half the loss made good over a year
   tikhvin: [0.8, 1.0],        // Soviet strength ratio, relative to the real, needed to retake Tikhvin in December
   siege: [3, 5],              // months without the Ladoga route before Leningrad capitulates
@@ -113,6 +117,7 @@ function run(L, p) {
   const railIdx = Math.pow(L.railX, p.railE);
   const startFrac = L.start === '1941-06-01' ? 1.0 : 0.3;
   const hubAt = mm => { if (!ev.Moscow || ev.Moscow > mm + '-31') return 1; const since = (day(mm + '-15') - day(ev.Moscow)) / 30.4; return 1 - (1 - p.hub) * (1 - 0.5 * Math.min(1, Math.max(0, since) / 12)); };
+  let astrOn = false;   // the Astrakhan dash launched (it thins the Don flank)
   let typhoonDay = NaN, siegeMonths = 0, effort = 0, moscowOn = false, blueOn = false, stalPressure = 0, cauc = 0, winterOn = false;
   for (let t = 0; t < MONTHS.length; t++) {
     const m = MONTHS[t], yr = +m.slice(0, 4), Y = tot[yr];
@@ -184,7 +189,15 @@ function run(L, p) {
       km = Math.max(0, Math.min(km, room));
       adv[a] = km; depth[a] += km; advW += km * ({ N: 0.25, C: 0.4, S: 0.35 })[a];
     }
-    if (blueOn && depth.S > 1000) cauc = Math.max(cauc, Math.min(cauc + adv.S * 0.9 + (depth.S >= 1500 ? 0.5 * K.paceK.S * seasonOf('S') * Math.pow(FR, 0.3) * dev(FR, REF && REF.FR[t], p.alpha - 0.3) : 0), Math.max(0, (reach.S + K.overrun - 1000) * K.caucShare)));
+    // the Caucasus: a share of the south's supply reach (the rest goes to the Stalingrad axis) until the city falls and the whole of it is free;
+    // after Stalingrad the branch has the south's full striking power, in the Caucasus' own weather (dry October, rain in November, the passes closed in December)
+    if (blueOn && depth.S > 1000) {
+      const share = ev.StalingradFalls ? 1 : (L.caucShare != null ? L.caucShare : K.caucShare), cw = m <= '1942-09' ? seasonOf('S') : ev.StalingradFalls ? K.caucW[m] : seasonOf('S');
+      const push = depth.S >= 1500 ? (ev.StalingradFalls ? 1 : 0.5) * K.paceK.S * cw * Math.pow(FR, 0.3) * dev(FR, REF && REF.FR[t], p.alpha - 0.3) * Math.pow(wgt('S'), -p.reserveE * 0.4) : 0;
+      const reachC = ev.StalingradFalls && m >= '1942-10' ? rail.S + K.lorryRange * lorryIdx * K.caucL[m] : reach.S;   // the coast road and the Terek valley: the steppe's mud is not theirs
+      const c0 = cauc; cauc = Math.max(cauc, Math.min(cauc + adv.S * 0.9 + push, Math.max(0, (reachC + K.overrun - 1000) * share), 1000));
+      for (const [name, km] of CAUC) if (!ev[name] && cauc >= km) ev[name] = dateIn(m, Math.min(1, Math.max(0.05, (km - c0) / Math.max(1, cauc - c0))));
+    }
     // ---- Soviet winter counter-offensive: ground regained on the Moscow axis
     let regain = 0;
     if (winterOn && m >= '1941-12' && depth.N > 850 && !ev.TikhvinRetaken && !ev.Leningrad) {   // Tikhvin: retaken if the Soviets are strong enough; else Leningrad starves
@@ -216,13 +229,23 @@ function run(L, p) {
     if (blueOn && depth.S >= 1500 && !ev.StalingradFalls) {
       if (!ev.VolgaReached) ev.VolgaReached = dateIn(m, Math.min(1, (1500 - (depth.S - adv.S)) / Math.max(1, adv.S)));
       const vf = ev.VolgaReached && ev.VolgaReached.slice(0, 7) === m ? 1 - (+ev.VolgaReached.slice(8) / monthDays(m)) : 1;
-      if (m <= '1942-11') stalPressure += FR * Math.pow(wgt('S'), -p.reserveE) * vf;   // wgt('S') already carries the loss of the Moscow hub
+      if (m <= '1942-11') stalPressure += FR * Math.pow(wgt('S'), -p.reserveE) * vf * Math.pow((1.25 - (L.caucShare != null ? L.caucShare : K.caucShare)) / 0.5, 0.6);   // the effort the Caucasus does not take   // wgt('S') already carries the loss of the Moscow hub
       if (REF && stalPressure >= REF.stal * K.stalX * p.stalX) ev.StalingradFalls = m + '-15';
     }
+    // ---- after Stalingrad: a motorized dash down the west bank and across the Kalmyk steppe for Astrakhan (Directive No. 45; in reality a
+    // division patrolled to within 40 km of the city). No railway: lorries only beyond the Stalingrad railhead, and a race with the November weather.
+    if (ev.StalingradFalls && !ev.Astrakhan && m >= ev.StalingradFalls.slice(0, 7) && m <= '1942-12') {
+      astrOn = true;
+      const f0 = ev.StalingradFalls.slice(0, 7) === m ? +ev.StalingradFalls.slice(8) / monthDays(m) : 0;   // the share of the month gone before the city fell
+      const wf = m <= '1942-10' ? 1 : m === '1942-11' ? p.steppeNov : 0.05, capF = m <= '1942-10' ? 1 : m === '1942-11' ? p.steppeNov : 0.3;
+      const cap = L.supplyLimit ? Math.max(0, 1500 + (K.lorryRange * lorryIdx + K.overrun) * capF - depth.S) : 1e9;
+      let km = K.astrPace * p.astr * wf * (1 - f0) * Math.pow(FR, 0.3) * dev(FR, REF && REF.FR[t], p.alpha - 0.3) * Math.pow(wgt('S'), -p.reserveE * 0.4);
+      const full = km; km = Math.max(0, Math.min(km, cap, 1750 - depth.S));
+      if (km > 0) { if (depth.S + km >= 1750 - 1e-6) ev.Astrakhan = dateIn(m, f0 + (1 - f0) * Math.min(1, (1750 - depth.S) / Math.max(1, full))); depth.S += km; adv.S += km; }
+    }
     for (const a of AXES) for (const [name, km0] of MILES[a]) { const km = name === 'Moscow' ? L.moscowKm : km0; if (!ev[name] && depth[a] >= km) ev[name] = dateIn(m, Math.min(1, (km - (depth[a] - adv[a])) / Math.max(1, adv[a]))); }
-    for (const [name, km] of CAUC) if (!ev[name] && cauc >= km) ev[name] = m + '-20';
     // ---- Soviet production base: the real path, moved by the difference in territory lost (and Moscow's factories)
-    const lost = 0.12 * Math.min(1, depth.N / 850) + 0.18 * Math.min(1, depth.C / 1000) + 0.3 * Math.min(1, depth.S / 1000) + 0.1 * Math.max(0, Math.min(1, (depth.S - 1000) / 500)) + (ev.Moscow ? 0.12 : 0) + (ev.StalingradFalls ? 0.05 : 0) + (ev.Leningrad ? 0.04 : 0);
+    const lost = 0.12 * Math.min(1, depth.N / 850) + 0.18 * Math.min(1, depth.C / 1000) + 0.3 * Math.min(1, depth.S / 1000) + 0.1 * Math.max(0, Math.min(1, (depth.S - 1000) / 500)) + (ev.Moscow ? 0.12 : 0) + (ev.StalingradFalls ? 0.05 : 0) + (ev.Astrakhan ? 0.02 : 0) + (ev.Leningrad ? 0.04 : 0);
     const ind = Math.max(0.2, 1 - K.lostW * (lost - K.lostReal[t]));
     // ---- stocks
     const prodT = (yr === 1941 ? PROD.sTanks41 : PROD.sTanks42) * ind * L.sProdX * frac + (L.lendLease ? (t >= 4 ? (yr === 1941 ? 170 : 230) : 0) : 0);
@@ -239,7 +262,7 @@ function run(L, p) {
   }
   const nov = o.months[17];
   const resPower = comp(nov.sMen, Math.max(50, nov.sTanks), Math.max(50, nov.sAir), SWT) * hubAt('1942-11');   // the reserves that can be brought to the Don by November
-  const flank = comp(nov.gMen, nov.gTanks, nov.gAir, GWT);
+  const flank = comp(nov.gMen, nov.gTanks, nov.gAir, GWT) * (astrOn && ev.StalingradFalls <= '1942-10-31' ? 1 - K.astrFlank : 1);   // the Astrakhan group is off the Don when the counter-offensive opens
   const ratio = resPower / flank;
   o.uranus = { ratio, breakthrough: REF && ratio >= REF.uranus * K.uranusX * p.uranusX ? 1 : 0 };
   o.events = ev; ev.Typhoon = Number.isFinite(typhoonDay) ? iso(Math.round(typhoonDay)) : 'none'; o.y41 = tot[1941]; o.y42 = tot[1942];
@@ -264,8 +287,9 @@ function monteCarlo(L, n = 800, seed = 1941, fix = null) {
   const rng = rngFrom(seed), runs = [];
   for (let i = 0; i < n; i++) runs.push(flatten(run(L, fix ? Object.assign(sampleParams(rng), fix) : sampleParams(rng))));   // fix: hold named mechanisms at a value while the rest are drawn
   const q = {}, pick = (a, f) => a[Math.min(a.length - 1, Math.floor(f * a.length))];
-  for (const k of Object.keys(runs[0])) {
-    const v = runs[0][k];
+  const keys = new Set(); for (const r of runs) for (const k of Object.keys(r)) keys.add(k);   // events absent from some runs still get a share
+  for (const k of keys) {
+    const v = runs.find(r => r[k] != null)[k];
     if (typeof v === 'number' || typeof v === 'boolean') { const a = runs.map(r => +r[k]).filter(Number.isFinite).sort((x, y) => x - y); if (a.length) q[k] = [pick(a, 0.1), pick(a, 0.5), pick(a, 0.9), a.reduce((s, x) => s + x, 0) / a.length]; }
     else if (typeof v === 'string') { const a = runs.map(r => r[k]).filter(x => /^\d{4}-\d\d-\d\d$/.test(x)).map(day).sort((x, y) => x - y); q[k + '#share'] = [a.length / n]; if (a.length) q[k] = [iso(pick(a, 0.1)), iso(pick(a, 0.5)), iso(pick(a, 0.9))]; }
   }
@@ -279,7 +303,7 @@ function sensitivity(L, metric) {
   return { base: b, rows };
 }
 const STEPS = [   // from reality to the scenario, one change at a time; the decision first, so that the later changes show what they add to its chances
-  ['Reality', {}], ['Moscow first in 1942, then the south', { moscow42: true, blueStart: 'after Moscow' }],
+  ['Reality', {}], ['Moscow first in 1942, then the south', { moscow42: true, blueStart: 'after Moscow' }], ['More of the south\'s effort to the Caucasus', { caucShare: 0.85 }],
   ['Invasion on 1 June', { start: '1941-06-01' }], ['Soviets alerted, 3.7m men in the west', { sMen: 3700, alert: 1 }],
   ['More German men and tanks', { gMen: 3900, gTanks: 3800 }], ['Larger Luftwaffe', { gAirX: 1.5 }], ['German output and replacements', { gProdX: 1.3, gReplX: 1.25 }],
   ['More lorries and fuel, net of the extra divisions', { lorries: 1.1, fuel: 1.05, railX: 1.0 }], ['No Lend-Lease', { lendLease: false, sProdX: 0.96 }], ['Far East forces held back', { farEastHeld: 0.5 }],
