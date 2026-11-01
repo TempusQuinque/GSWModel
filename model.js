@@ -44,6 +44,7 @@ const K = {
     stalingrad: { pris: 40, kw: 30, g: 20 },      // the west bank cleared
     astrakhan: { pris: 25 }, grozny: { pris: 20 } },
   uranusFail: { s: 150, g: 60 },   // a counter-offensive that fails (Mars, Nov.–Dec. 1942, cost the Soviets some 215,000): its cost falls on the attacker, and the Germans are spared the losses of the encirclement   // thousands: a November counter-offensive that fails costs the Soviets, and spares the Germans the encirclement battles of December
+  goldFrom: 10, goldProd: 1.03, goldPocket: 0.95, goldRes: 1.03,   // gold purchases through the Pacific: from April 1942 (orders of mid-1941), output ×1.03, pockets ×0.95 (trucks), Don reserves ×1.03 (rail stock)
   lineBattle: 25,   // km of advance-equivalent for the losses when a held line is broken on a broad front over a fortnight: killed and wounded, not prisoners (the line is given up in order)
   astrPace: 400, astrFlank: 0.1,   // the Astrakhan dash: km a month in dry weather for a motorized group; the share of the southern striking force it takes off the Don flank
   caucW: { '1942-10': 0.8, '1942-11': 0.5, '1942-12': 0.15 }, caucL: { '1942-10': 1, '1942-11': 0.6, '1942-12': 0.3 },   // lorry reach in the Caucasus by month   // the Caucasus' own weather once the branch has the south's whole effort
@@ -61,14 +62,14 @@ const START = { gMen: 3300, gTanks: 3600, gAir: 2800, sMen: 2900, sTanks: 22600,
 // ------------------------------------------------------------------ levers
 const LEVERS_REAL = {
   label: 'Reality', start: '1941-06-22', gMen: 3300, gTanks: 3600, gAirX: 1.0, lorries: 1.0, fuel: 1.0, railX: 1.0,
-  sMen: 2900, alert: 0, lendLease: true, farEastHeld: 0, gProdX: 1.0, gReplX: 1.0, sProdX: 1.0,
+  sMen: 2900, alert: 0, aid: 'll', farEastHeld: 0, gProdX: 1.0, gReplX: 1.0, sProdX: 1.0,
   kievDiversion: true, moscowKm: 1080, moscow42: false, moscowDef: 0.65, blueStart: '1942-07', supplyLimit: true, caucShare: 0.75, sEff: 1.0, lineN: 0, lineC: 0,   // share of the south's supply reach given to the Caucasus (Directive No. 45 split the effort)
   stavka41: 'south', stavka42: 'moscow',     // where the Stavka keeps its weight: 1941 the Kiev group of fronts (as in reality), 1942 before Moscow (as in reality)
   sovDepth: false, kievWithdraw: false, winterLimited: false, noKharkov: false,
 };
 const LEVERS_SCEN = Object.assign({}, LEVERS_REAL, {
   label: 'Scenario', start: '1941-06-01', gMen: 3900, gTanks: 3800, gAirX: 1.5, lorries: 1.1, fuel: 1.05, railX: 1.0,   // net of what the extra divisions and aircraft consume
-  sMen: 3700, alert: 1, lendLease: false, farEastHeld: 0.5, gProdX: 1.3, gReplX: 1.25, sProdX: 0.96,
+  sMen: 3700, alert: 1, aid: 'none', farEastHeld: 0.5, gProdX: 1.3, gReplX: 1.25, sProdX: 0.96,
   kievDiversion: true, moscow42: true, moscowDef: 0.65, blueStart: 'after Moscow', caucShare: 0.85,   // the article has Grozny on 24 Sept.: the Caucasus took a larger share of the south's effort than in reality
 });
 
@@ -273,6 +274,7 @@ function run(L, p) {
     const advWw = AXES.reduce((acc, a) => acc + adv[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);
     const lineW = AXES.reduce((acc, a) => acc + lineEq[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);   // the broad-front battle for a held line: it costs the defender killed and wounded, in proportion to the men there, not a pocket   // the men standing on each axis
     let pris = K.pockets * S.men * (advWw / 400) * forward * sealWear * Math.pow(sealLever * (L.sovDepth && t <= 2 ? 0.7 : 1) / leak, p.pocketE) / Math.sqrt(sEff);   // better-led troops get more of themselves out of a pocket
+    if (L.aid === 'gold' && t >= K.goldFrom) pris *= K.goldPocket;   // American trucks: the reserve armies get away more often
     if (m === '1941-09' && L.kievWithdraw) pris *= 0.45;
     if (m === '1941-09' && !L.kievDiversion) pris *= 0.6;                            // no northern pincer: the Kiev pocket is far smaller
     if (m === '1942-05' && sovOff) pris += 240 * Math.pow(G.men / 3300, 0.5);          // the Kharkov offensive cut off at Izyum
@@ -309,8 +311,11 @@ function run(L, p) {
     const lost = 0.12 * Math.min(1, depth.N / 850) + 0.18 * Math.min(1, depth.C / 1000) + 0.3 * Math.min(1, depth.S / 1000) + 0.1 * Math.max(0, Math.min(1, (depth.S - 1000) / 500)) + (ev.Moscow ? 0.12 : 0) + (ev.StalingradFalls ? 0.05 : 0) + (ev.Astrakhan ? 0.02 : 0) + (ev.Leningrad ? 0.04 : 0);
     const ind = Math.max(0.2, 1 - K.lostW * (lost - K.lostReal[t]));
     // ---- stocks
-    const prodT = (yr === 1941 ? PROD.sTanks41 : PROD.sTanks42) * ind * L.sProdX * frac + (L.lendLease ? (t >= 4 ? (yr === 1941 ? 170 : 230) : 0) : 0);
-    const prodA = (yr === 1941 ? PROD.sAir41 : PROD.sAir42) * ind * L.sProdX * frac + (L.lendLease && t >= 4 ? (yr === 1941 ? 150 : 200) : 0);
+    // foreign supply: Lend-Lease adds tanks and aircraft from October 1941; gold purchases through Vladivostok (a neutral America selling for cash, Japan tolerating only non-military cargo)
+    // bring trucks, aviation fuel, aluminium and rail stock from the spring of 1942: a little more output, somewhat smaller pockets, a little more reserve power on the Don
+    const ll = L.aid === 'll', gold = L.aid === 'gold' && t >= K.goldFrom;
+    const prodT = (yr === 1941 ? PROD.sTanks41 : PROD.sTanks42) * ind * L.sProdX * (gold ? K.goldProd : 1) * frac + (ll ? (t >= 4 ? (yr === 1941 ? 170 : 230) : 0) : 0);
+    const prodA = (yr === 1941 ? PROD.sAir41 : PROD.sAir42) * ind * L.sProdX * (gold ? K.goldProd : 1) * frac + (ll && t >= 4 ? (yr === 1941 ? 150 : 200) : 0);
     const mob = (yr === 1941 ? PROD.sMen41 : PROD.sMen42) * (0.75 + 0.25 * ind) * frac - (t >= 4 && t <= 7 ? 65 * L.farEastHeld : 0);
     const netLoss = pris + 0.35 * sKw + 0.2 * sKw;                            // dead, and the wounded away for months
     S = { men: Math.max(500, S.men - netLoss + mob), tanks: Math.max(300, S.tanks - sTl + prodT), air: Math.max(300, S.air - sAl + prodA) };
@@ -335,7 +340,7 @@ function run(L, p) {
     o.months.push({ m, depth: { ...depth }, reach: { ...reach }, cauc, gP, sP, sMen0, gMen: G.men, gTanks: G.tanks, gAir: G.air, sMen: S.men, sTanks: S.tanks, sAir: S.air, ind, FR, pris, sKw, gCas, regain, moscowOn, blueOn, stalPressure });
   }
   const nov = o.months[17];
-  const resPower = comp(nov.sMen, Math.max(50, nov.sTanks), Math.max(50, nov.sAir), SWT) * hubAt('1942-11');   // the reserves that can be brought to the Don by November
+  const resPower = comp(nov.sMen, Math.max(50, nov.sTanks), Math.max(50, nov.sAir), SWT) * hubAt('1942-11') * (L.aid === 'gold' ? K.goldRes : 1);   // the reserves that can be brought to the Don by November
   const flank = comp(nov.gMen, nov.gTanks, nov.gAir, GWT) * (astrOn && ev.StalingradFalls <= '1942-10-31' ? 1 - K.astrFlank : 1);   // the Astrakhan group is off the Don when the counter-offensive opens
   const ratio = resPower / flank;
   o.uranus = { ratio, breakthrough: REF && ratio >= REF.uranus * K.uranusX * p.uranusX ? 1 : 0 };
@@ -387,7 +392,7 @@ const STEPS = [   // from reality to the scenario, one change at a time; the dec
   ['Reality', {}], ['Moscow first in 1942, then the south', { moscow42: true, blueStart: 'after Moscow' }], ['More of the south\'s effort to the Caucasus', { caucShare: 0.85 }],
   ['Invasion on 1 June', { start: '1941-06-01' }], ['Soviets alerted, 3.7m men in the west', { sMen: 3700, alert: 1 }],
   ['More German men and tanks', { gMen: 3900, gTanks: 3800 }], ['Larger Luftwaffe', { gAirX: 1.5 }], ['German output and replacements', { gProdX: 1.3, gReplX: 1.25 }],
-  ['More lorries and fuel, net of the extra divisions', { lorries: 1.1, fuel: 1.05, railX: 1.0 }], ['No Lend-Lease', { lendLease: false, sProdX: 0.96 }], ['Far East forces held back', { farEastHeld: 0.5 }],
+  ['More lorries and fuel, net of the extra divisions', { lorries: 1.1, fuel: 1.05, railX: 1.0 }], ['No Lend-Lease', { aid: 'none', sProdX: 0.96 }], ['Far East forces held back', { farEastHeld: 0.5 }],
 ];
 const M = { MONTHS, AXES, MILES, CAUC, K, PROD, START, LEVERS_REAL, LEVERS_SCEN, PRIORS, STEPS, sampleParams, run, setRef, monteCarlo, sensitivity, flatten, day, iso, getRef: () => REF };
 if (typeof module !== 'undefined' && module.exports) module.exports = M; else root.EFModel = M;
