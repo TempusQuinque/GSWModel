@@ -37,6 +37,13 @@ const K = {
   seasonS: { '1941-10': 0.334, '1941-11': 0.662 },   // the south's mud came later and lighter
   capN: 950,                              // Leningrad is invested, not stormed: the northern axis ends at Tikhvin
   sCas42X: 2.600, gCas42X: 0.632,            // 1942: the Red Army attacked for much of the year, at its own cost
+  cityLoss: {   // thousands, beyond the month's ordinary attrition; pris and kw Soviet (× relative Soviet strength^0.7), g German (× relative German strength^0.5)
+    moscow: { pris: 350, kw: 175, g: 40 },        // a Kiev- or Vyazma-sized pocket round the capital (the article: 350,000 prisoners); the attacker's cost that of a month's set-piece battle
+    moscowSpent: { pris: 30, kw: 100, g: 40 },    // a failed set-piece attack: the Germans lose about as much as in success, the defenders far less and almost no prisoners
+    leningrad: { pris: 280, kw: 0, g: 5 },        // the garrison, starved, capitulates
+    stalingrad: { pris: 40, kw: 30, g: 20 },      // the west bank cleared
+    astrakhan: { pris: 25 }, grozny: { pris: 20 } },
+  uranusFail: { s: 150, g: 60 },   // a counter-offensive that fails (Mars, Nov.–Dec. 1942, cost the Soviets some 215,000): its cost falls on the attacker, and the Germans are spared the losses of the encirclement   // thousands: a November counter-offensive that fails costs the Soviets, and spares the Germans the encirclement battles of December
   astrPace: 400, astrFlank: 0.1,   // the Astrakhan dash: km a month in dry weather for a motorized group; the share of the southern striking force it takes off the Don flank
   caucW: { '1942-10': 0.8, '1942-11': 0.5, '1942-12': 0.15 }, caucL: { '1942-10': 1, '1942-11': 0.6, '1942-12': 0.3 },   // lorry reach in the Caucasus by month   // the Caucasus' own weather once the branch has the south's whole effort
   caucShare: 0.75,                        // share of the southern supply reach that the Caucasus branch can use
@@ -217,15 +224,15 @@ function run(L, p) {
     if (m === '1942-05' && sovOff) pris += 240 * Math.pow(G.men / 3300, 0.5);          // the Kharkov offensive cut off at Izyum
     // ---- attrition
     const act = Math.max(0.35, Math.max(...Object.values(on)), sovOff ? 1 : 0, moscowOn ? 1 : 0) * intensity * frac;
-    const sKw = K.sCas * Math.pow(gP, 0.7) * dev(gP, REF && REF.gP[t], p.exchD) * act * (sovOff ? 1.6 : 1) * Math.pow(prep, 0.3) * (yr === 1942 && m >= '1942-06' ? K.sCas42X : 1);
-    const gCas = K.gCas * Math.pow(sP, 0.5) * dev(sP, REF && REF.sP[t], p.gExchD) * act * (sovOff ? 1.3 : 1) * ((L.alert && t <= 1) ? 1.15 : 1) / Math.pow(L.gAirX, 0.1) * Math.pow(G.men / 3300, 0.4) * (yr === 1942 && m >= '1942-06' ? K.gCas42X : 1) / Math.pow(prep, 0.5);   // stronger defences cost the attacker
+    let sKw = K.sCas * Math.pow(gP, 0.7) * dev(gP, REF && REF.gP[t], p.exchD) * act * (sovOff ? 1.6 : 1) * Math.pow(prep, 0.3) * (yr === 1942 && m >= '1942-06' ? K.sCas42X : 1);
+    let gCas = K.gCas * Math.pow(sP, 0.5) * dev(sP, REF && REF.sP[t], p.gExchD) * act * (sovOff ? 1.3 : 1) * ((L.alert && t <= 1) ? 1.15 : 1) / Math.pow(L.gAirX, 0.1) * Math.pow(G.men / 3300, 0.4) * (yr === 1942 && m >= '1942-06' ? K.gCas42X : 1) / Math.pow(prep, 0.3);   // stronger defences cost the attacker (the month's ordinary attrition already runs at full intensity; the battle's own bill is added below)
     const sTl = S.tanks * K.sTank[yr] * act + 0.5 * pris;
     const gTl = G.tanks * K.gTank * act * Math.pow(sP, 0.3);
     const groundAir = (t === 0 && L.alert) ? 1 - L.alert * (1 - p.alertAir) : 1;
     const sAl = S.air * K.sAir[yr] * act * (t === 0 ? 1.5 * groundAir : 1) * Math.pow(L.gAirX, 0.4);
     const gAl = G.air * K.gAir * act * Math.pow(sP, 0.3);
     // ---- events
-    if (moscowOn) { effort += (m === '1942-05' ? 0.35 : 1); if (depth.C >= L.moscowKm) moscowOn = false; else if (effort >= p.culm) { ev.MoscowSpent = m + '-28'; moscowOn = false; } }
+    if (moscowOn) { effort += (m === '1942-05' ? 0.35 : 1); if (depth.C >= L.moscowKm) moscowOn = false; else if (effort >= p.culm) { ev.MoscowSpent = m + '-28'; moscowOn = false; } }   // (the losses of success or failure are added below, in the month of the event)
     if (blueOn && depth.S >= 1500 && !ev.StalingradFalls) {
       if (!ev.VolgaReached) ev.VolgaReached = dateIn(m, Math.min(1, (1500 - (depth.S - adv.S)) / Math.max(1, adv.S)));
       const vf = ev.VolgaReached && ev.VolgaReached.slice(0, 7) === m ? 1 - (+ev.VolgaReached.slice(8) / monthDays(m)) : 1;
@@ -257,6 +264,19 @@ function run(L, p) {
     G = { men: Math.max(500, G.men - gCas - sick + (yr === 1941 ? PROD.gRepl41 : PROD.gRepl42) * L.gReplX * frac * (m >= '1941-12' && m <= '1942-05' ? 1.5 : 1)),
           tanks: Math.max(200, G.tanks - gTl + (yr === 1941 ? PROD.gTanksE41 : PROD.gTanksE42) * L.gProdX * frac),
           air: Math.max(200, G.air - gAl + (yr === 1941 ? PROD.gAir41 : PROD.gAir42) * L.gAirX * frac) };
+    // ---- what a campaign's success costs the loser: the defenders of a city that falls are lost with it (the article's figures for the scenario,
+    // scaled by the Soviet strength in the field), and a counter-offensive that fails costs the attacker rather than the defender
+    const fell = name => ev[name] && ev[name].slice(0, 7) === m;
+    const sScale = Math.pow(S.men / (REF ? REF.sMen[t] : S.men), 0.7);
+    let cityPris = 0, citySKw = 0, cityGCas = 0;
+    const city = (c, f = 1) => { cityPris += c.pris * sScale * f; citySKw += (c.kw || 0) * sScale * f; cityGCas += (c.g || 0) * Math.pow(G.men / 3300, 0.5) * f; };
+    if (fell('Moscow')) city(K.cityLoss.moscow);            // the envelopment of the city: the Moscow defence zone and the armies caught inside, as at Kiev and Vyazma a pocket's killed and wounded run to about half its prisoners
+    if (fell('MoscowSpent')) city(K.cityLoss.moscowSpent);  // the attack fails: the attacker bleeds against prepared defences and the counter-attacks that follow (Rzhev, Kursk); the defender loses heavily but few prisoners
+    if (fell('Leningrad')) city(K.cityLoss.leningrad);      // the garrison capitulates (the Leningrad Front, starved for months; Sevastopol and Singapore on a larger scale)
+    if (fell('StalingradFalls')) city(K.cityLoss.stalingrad);   // the Sixty-second Army's remnant on the west bank
+    if (fell('Astrakhan')) city(K.cityLoss.astrakhan);
+    if (fell('Grozny')) city(K.cityLoss.grozny);
+    pris += cityPris; sKw += citySKw; gCas += cityGCas;
     Y.sCas += sKw + pris; Y.sIrr += pris + 0.35 * sKw; Y.pris += pris; Y.sTl += sTl; Y.sAl += sAl; Y.gCas += gCas; Y.gTl += gTl; Y.gAl += gAl;
     o.months.push({ m, depth: { ...depth }, reach: { ...reach }, cauc, gP, sP, sMen0, gMen: G.men, gTanks: G.tanks, gAir: G.air, sMen: S.men, sTanks: S.tanks, sAir: S.air, ind, FR, pris, sKw, gCas, regain, moscowOn, blueOn, stalPressure });
   }
@@ -265,6 +285,11 @@ function run(L, p) {
   const flank = comp(nov.gMen, nov.gTanks, nov.gAir, GWT) * (astrOn && ev.StalingradFalls <= '1942-10-31' ? 1 - K.astrFlank : 1);   // the Astrakhan group is off the Don when the counter-offensive opens
   const ratio = resPower / flank;
   o.uranus = { ratio, breakthrough: REF && ratio >= REF.uranus * K.uranusX * p.uranusX ? 1 : 0 };
+  if (REF && !o.uranus.breakthrough) {   // the counter-offensive fails: its losses fall on the attacker, and the Germans are spared December's encirclement battles
+    const sp = Math.pow(nov.sP / REF.sP[17], 0.7), gp = Math.pow(nov.gP / REF.gP[17], 0.5);
+    tot[1942].sCas += K.uranusFail.s * sp; tot[1942].sIrr += 0.35 * K.uranusFail.s * sp; tot[1942].gCas -= K.uranusFail.g * gp;
+    const e = o.months[18]; e.sMen = Math.max(500, e.sMen - 0.55 * K.uranusFail.s * sp); e.gMen += K.uranusFail.g * gp;
+  }
   o.events = ev; ev.Typhoon = Number.isFinite(typhoonDay) ? iso(Math.round(typhoonDay)) : 'none'; o.y41 = tot[1941]; o.y42 = tot[1942];
   o.y41.ratio = o.y41.sCas / o.y41.gCas; o.y42.ratio = o.y42.sCas / o.y42.gCas;
   o.end41 = o.months[6]; o.mar42 = o.months[9]; o.may42 = o.months[11]; o.end42 = o.months[18];
