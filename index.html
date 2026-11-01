@@ -4,38 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Eastern Front Model 1941–42</title>
-<meta name="description" content="A calibrated model of the 1941 campaign, the winter counter-offensive and spring 1942 for the Halifax alternate-history scenario, with adjustable assumptions and ranges from 1,500 runs.">
+<meta name="description" content="A monthly model of the German–Soviet war, June 1941 to December 1942, for the Halifax alternate-history scenario, calibrated to the real front and losses, with adjustable assumptions and decisions.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Public+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Roboto+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap">
 <style>
 /* base reset */
-html { -webkit-text-size-adjust: 100%; }
-:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-img { max-width: 100%; }
-[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; } :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); } img { max-width: 100%; } [hidden] { display: none !important; }
 </style>
 <style>
-/* Layout: a staff work-table. Assumptions sit in a fixed column at the left; results read down the right, summary first. */
+/* Layout: a staff work-table. Assumptions in a sticky column at the left; results read down the right, summary first. */
 :root {
   --bg: #eef1ee; --panel: #f7f9f7; --ink: #15211c; --muted: #56645c; --rule: #c8d1cb; --soft: #e2e8e3;
   --accent: #2f5d50; --accent-ink: #ffffff; --ger: #2a78d6; --sov: #eb6834; --band-ger: rgba(42,120,214,.16); --band-sov: rgba(235,104,52,.16);
-  --warn: #9a5b00;
-  --f-display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
-  --f-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --f-display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif; --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif; --f-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
+:root[lang="ru"] { --f-display: "Roboto Condensed", "Arial Narrow", sans-serif; --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #121815; --panel: #18201c; --ink: #e5ebe7; --muted: #9eaea5; --rule: #2d3934; --soft: #202a25;
-  --accent: #7fb8a4; --accent-ink: #0e1512; --ger: #3987e5; --sov: #d95926; --band-ger: rgba(57,135,229,.22); --band-sov: rgba(217,89,38,.22);
-  --warn: #e0a64a; color-scheme: dark } }
+  --bg: #121815; --panel: #18201c; --ink: #e5ebe7; --muted: #9eaea5; --rule: #2d3934; --soft: #202a25; --accent: #7fb8a4; --accent-ink: #0e1512;
+  --ger: #3987e5; --sov: #d95926; --band-ger: rgba(57,135,229,.22); --band-sov: rgba(217,89,38,.22); color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #121815; --panel: #18201c; --ink: #e5ebe7; --muted: #9eaea5; --rule: #2d3934; --soft: #202a25;
-  --accent: #7fb8a4; --accent-ink: #0e1512; --ger: #3987e5; --sov: #d95926; --band-ger: rgba(57,135,229,.22); --band-sov: rgba(217,89,38,.22);
-  --warn: #e0a64a; color-scheme: dark }
+  --bg: #121815; --panel: #18201c; --ink: #e5ebe7; --muted: #9eaea5; --rule: #2d3934; --soft: #202a25; --accent: #7fb8a4; --accent-ink: #0e1512;
+  --ger: #3987e5; --sov: #d95926; --band-ger: rgba(57,135,229,.22); --band-sov: rgba(217,89,38,.22); color-scheme: dark }
 * { box-sizing: border-box }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); margin: 0 }
-.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 56px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
 header.top { display: grid; gap: 6px; margin-bottom: 22px }
 .eyebrow { font: 600 12px/1 var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted) }
 h1 { font: 700 clamp(30px, 4vw, 44px)/1.05 var(--f-display); margin: 0; letter-spacing: .01em; text-wrap: balance }
@@ -45,7 +37,8 @@ h1 { font: 700 clamp(30px, 4vw, 44px)/1.05 var(--f-display); margin: 0; letter-s
 aside.levers { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow: auto }
 @media (max-width: 900px) { aside.levers { position: static; max-height: none } }
 aside h2, section h2 { font: 600 20px/1.2 var(--f-display); letter-spacing: .03em; margin: 0 0 4px }
-.presets { display: flex; gap: 8px; margin: 10px 0 14px }
+.lang { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 2px } .lang button { font: 600 12px/1 var(--f-display); letter-spacing: .06em; padding: 6px 9px; border-color: var(--rule); color: var(--muted) } .lang button.on { background: var(--soft); color: var(--ink); border-color: var(--rule) }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px }
 button { font: 600 13px/1 var(--f-body); border-radius: 4px; padding: 9px 12px; cursor: pointer; border: 1px solid var(--accent); background: transparent; color: var(--accent) }
 button.on { background: var(--accent); color: var(--accent-ink) }
 button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
@@ -54,398 +47,404 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .lv label output { font: 500 12px/1.4 var(--f-data); color: var(--ink); white-space: nowrap }
 .lv .hint { font-size: 12px; color: var(--muted); line-height: 1.35 }
 .lv input[type=range] { width: 100%; accent-color: var(--accent) }
-.lv.check label { align-items: center; justify-content: flex-start }
-.lv.check input { accent-color: var(--accent); width: 16px; height: 16px }
+.lv.check label { align-items: center; justify-content: flex-start } .lv.check input { accent-color: var(--accent); width: 16px; height: 16px }
+.lv select { font: 13px var(--f-body); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); max-width: 100%; width: 100% }
 .grp { font: 600 12px/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 16px 0 2px }
 main { display: grid; gap: 22px; min-width: 0 }
-.status { font-size: 13px; color: var(--muted) }
-.status b { color: var(--ink); font-weight: 600 }
+.status { font-size: 13px; color: var(--muted) } .status b { color: var(--ink); font-weight: 600 }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px }
 .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 14px 12px; display: grid; gap: 4px; align-content: start }
 .card .k { font: 600 12px/1.2 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted) }
-.card .v { font: 600 28px/1.1 var(--f-display); font-variant-numeric: tabular-nums }
-.card .r { font: 400 12px/1.4 var(--f-data); color: var(--muted) }
+.card .v { font: 600 24px/1.1 var(--f-display); font-variant-numeric: tabular-nums; overflow-wrap: anywhere } .card .r { font: 400 12px/1.4 var(--f-data); color: var(--muted); overflow-wrap: anywhere }
 section { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 18px; min-width: 0 }
 section > p.sub { margin: 0 0 12px; color: var(--muted); max-width: 80ch; font-size: 14px }
 .tablewrap { overflow-x: auto }
 table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums }
 th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--soft); white-space: nowrap }
-th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 200px }
+th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 160px }
 thead th { font: 600 12px/1.2 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule) }
-td .rng { display: block; font: 400 11.5px/1.3 var(--f-data); color: var(--muted) }
-td.num { font-family: var(--f-data); font-size: 13px }
+td .rng { display: block; font: 400 11.5px/1.3 var(--f-data); color: var(--muted) } td.num { font-family: var(--f-data); font-size: 13px }
 tr.sep td { border-top: 1px solid var(--rule) }
-.diff-up { color: var(--sov) } .diff-dn { color: var(--ger) }
-.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px }
-.chart { width: 100%; height: auto; display: block }
-.chart text { fill: var(--muted); font: 11px var(--f-data) }
-.chart .lab { fill: var(--ink); font: 600 12px var(--f-body) }
-.chart .axis { stroke: var(--rule); stroke-width: 1 }
-.chart .grid { stroke: var(--soft); stroke-width: 1 }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); margin: 4px 0 8px }
-.legend span { display: inline-flex; align-items: center; gap: 6px }
-.sw { width: 18px; height: 0; border-top: 2px solid; display: inline-block }
-.sw.dash { border-top-style: dashed }
-.sw.box { width: 12px; height: 10px; border: 0; border-radius: 2px }
-#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font: 12px/1.4 var(--f-body); padding: 7px 9px; border-radius: 4px; max-width: 280px; z-index: 20; opacity: 0; transition: opacity .1s }
-details { border-top: 1px solid var(--rule); padding-top: 10px }
-details + details { margin-top: 10px }
-summary { cursor: pointer; font: 600 16px/1.3 var(--f-display); letter-spacing: .03em }
-.method { font-size: 14px; max-width: 86ch } .method li { margin: 3px 0 }
-.note { font-size: 12.5px; color: var(--muted) }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 4px 0 10px; font-size: 13px }
+.toolbar select { font: 13px var(--f-body); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); max-width: 100% }
+.chart { width: 100%; height: auto; display: block } .chart text { fill: var(--muted); font: 11px var(--f-data) } .chart .lab { fill: var(--ink); font: 600 12px var(--f-body) }
+.chart .axis { stroke: var(--rule); stroke-width: 1 } .chart .grid { stroke: var(--soft); stroke-width: 1 }
+.scrollx { overflow-x: auto } @media (max-width: 640px) { #mv { min-width: 640px } }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); margin: 4px 0 8px } .legend span { display: inline-flex; align-items: center; gap: 6px }
+.sw { width: 18px; height: 0; border-top: 2px solid; display: inline-block } .sw.dash { border-top-style: dashed } .sw.box { width: 12px; height: 10px; border: 0; border-radius: 2px }
+#tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font: 12px/1.4 var(--f-body); padding: 7px 9px; border-radius: 4px; max-width: 300px; z-index: 20; opacity: 0; transition: opacity .1s }
+details { border-top: 1px solid var(--rule); padding-top: 10px } details + details { margin-top: 10px }
+summary { cursor: pointer; font: 600 16px/1.3 var(--f-display); letter-spacing: .03em } .method { font-size: 14px; max-width: 86ch } .method li { margin: 3px 0 } .note { font-size: 12.5px; color: var(--muted) }
+.flag { display: inline-block; font: 600 11px/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; padding: 4px 7px; border-radius: 3px; background: var(--soft); color: var(--muted) }
 @media (prefers-reduced-motion: reduce) { #tip { transition: none } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="eyebrow">Halifax scenario · campaign model · June 1941 to May 1942</div>
-    <h1>Eastern Front Model 1941–42</h1>
-    <p class="lede">The real campaign is the baseline. Each change the scenario makes acts through a stated mechanism whose strength is uncertain, so every result is a range from 1,500 runs: the middle figure, with the 10th to 90th percentile below it. With every assumption set to reality, the model returns the real figures.</p>
+    <div class="lang" role="group" aria-label="Language"><button id="lEn" class="on" type="button" lang="en">English</button><button id="lRu" type="button" lang="ru">Русский</button></div>
+    <div class="eyebrow" data-t="eyebrow">Halifax scenario · monthly campaign model · June 1941 to December 1942</div>
+    <h1 data-t="h1">Eastern Front Model 1941–42</h1>
+    <p class="lede" data-t="lede">A month-by-month model of the German–Soviet war. Each month it carries forward men, tanks and aircraft on both sides, the German railheads and supply reach on three axes, and the Soviet production base, and moves the front by a dozen mechanisms. Its constants are set so that the real decisions reproduce the real front and the real losses of both years; the assumptions below then play the scenario. Results are the middle of 600 runs, with the 10th to 90th percentile where it matters.</p>
   </header>
-
   <div class="grid">
     <aside class="levers" aria-label="Assumptions">
-      <h2>Assumptions</h2>
-      <div class="presets">
-        <button id="pScen" class="on" type="button">Scenario</button>
-        <button id="pReal" type="button">Reality</button>
-      </div>
+      <h2 data-t="assumptions">Assumptions</h2>
+      <div class="presets"><button id="pScen" class="on" type="button" data-t="scenario">Scenario</button><button id="pReal" type="button" data-t="reality">Reality</button></div>
       <div id="leverList"></div>
     </aside>
-
     <main>
       <div class="status" id="status" aria-live="polite">Running…</div>
       <div class="cards" id="cards"></div>
-
       <section>
-        <h2>Scenario against reality</h2>
-        <p class="sub">Each bar is the scenario's 10th–90th percentile as a share of the real figure; the dot is the middle run. Reality is the line at 100. Hover a row for the figures.</p>
-        <div class="legend"><span><i class="sw box" style="background:var(--band-ger);outline:1px solid var(--ger)"></i>Scenario range</span><span><i class="sw" style="border-color:var(--ink)"></i>Reality (100)</span></div>
-        <svg class="chart" id="strip" role="img" aria-label="Scenario outcomes as a percentage of reality"></svg>
+        <h2 data-t="front.h">The front, month by month</h2>
+        <p class="sub" data-t="front.sub">Each road is one axis of the German advance, with its towns marked at their distance from the frontier of June 1941. The solid bar shows how far the model's front has got by the chosen month (the middle run; the faint extension is the 10th–90th percentile); the hollow marker is the real front in the same month. A bar that passes a town means the town has fallen. Leningrad is invested rather than stormed, so the northern road ends at Tikhvin.</p>
+        <div class="toolbar"><label for="mSlider" data-t="front.month">Month</label><input type="range" id="mSlider" min="0" max="18" step="1" value="6" style="flex:1;min-width:160px;accent-color:var(--accent)"><output id="mLabel" style="font:600 14px var(--f-display);min-width:90px"></output><button id="mPlay" type="button">Play</button></div>
+        <div class="legend"><span><i class="sw box" style="background:var(--ger)"></i><span data-t="legend.model">Model front</span></span><span><i class="sw box" style="background:var(--band-ger);outline:1px solid var(--ger)"></i><span data-t="legend.range">Range of runs</span></span><span><i class="sw box" style="background:transparent;outline:2px solid var(--sov);opacity:.5"></i><span data-t="legend.real">Real front</span></span></div>
+        <svg class="chart" id="roads" role="img" aria-label="The German front on each axis in the chosen month"></svg>
       </section>
-
       <section>
-        <h2>1941: the summer and autumn campaign</h2>
-        <p class="sub">To the halt before Moscow on 5 December. Soviet losses on Krivosheev's basis; prisoners by the German count; German casualties on Halder's basis (killed, wounded and missing).</p>
-        <div class="tablewrap"><table id="t1941"></table></div>
+        <h2 data-t="events.h">Events</h2>
+        <div class="tablewrap"><table id="tEvents"></table></div>
       </section>
-
       <section>
-        <h2>1941: pace and ground</h2>
-        <p class="sub">Dates follow from the pace of each phase. Ground is not modelled but assumed: the advance stops at the real farthest line plus the supply margin set at left. The last two rows show how far the pace alone would carry the advance: well past the real halt, about 30 km from the Kremlin. In the model, only the supply limit keeps Moscow from falling in 1941.</p>
-        <div class="tablewrap"><table id="tDates"></table></div>
+        <h2 data-t="loss.h">Losses and strengths</h2>
+        <p class="sub" data-t="loss.sub">Soviet losses on Krivosheev's basis; prisoners by the German count; German casualties on Halder's basis. Strengths are the field forces (Soviet) and the army in the east (German).</p>
+        <div class="tablewrap"><table id="tLoss"></table></div>
       </section>
-
       <section>
-        <h2>Winter counter-offensive, December 1941 to March 1942</h2>
-        <p class="sub">The Soviet strike power is set by the men, tanks and aircraft left in December; the German defence by the men, tanks and air power in the east. The ground retaken scales with their ratio. Distances run from Noginsk, east of Moscow, where the 1942 pincers meet: Kalinin is 193 km, Rzhev 259; Tula 191, Kaluga 202, Bolkhov 311.</p>
-        <div class="tablewrap"><table id="tWinter"></table></div>
+        <h2 data-t="mv.h">What moves the result</h2>
+        <p class="sub" data-t="mv.sub">Above the line: from reality to the scenario, one change of the premise at a time in the order listed (a change counts for more or less depending on what came before it), then the slider changes if the settings at left differ from the scenario. Below the line: how far each uncertain mechanism in the model, moved from one end of its range to the other, could shift the result for the settings at left; the eight that matter most.</p>
+        <div class="toolbar"><label for="mvMetric" data-t="mv.result">Result</label><select id="mvMetric"></select><span id="mvStatus" style="font-size:12px;color:var(--muted)"></span></div>
+        <div class="scrollx"><svg class="chart" id="mv" role="img" aria-label="What moves the result: the contribution of each change of the premise, and the range each uncertain mechanism gives"></svg></div>
       </section>
-
       <section>
-        <h2>Spring 1942: the forces and the offensive on Moscow</h2>
-        <p class="sub">Strengths on 1 May 1942. The Moscow offensive uses Typhoon (October 1941) as its analogue, slowed by the prepared defences of the Moscow zone. If the ring has not closed after 35–60 days, the offensive is spent and Moscow holds. For reality it is a what-if: the same offensive mounted by the real German army.</p>
-        <div class="tablewrap"><table id="tSpring"></table></div>
-      </section>
-
-      <section>
-        <h2>Forces in the field</h2>
-        <div class="legend">
-          <span><i class="sw" style="border-color:var(--ger)"></i>German, scenario</span><span><i class="sw dash" style="border-color:var(--ger)"></i>German, reality</span>
-          <span><i class="sw" style="border-color:var(--sov)"></i>Soviet, scenario</span><span><i class="sw dash" style="border-color:var(--sov)"></i>Soviet, reality</span>
-        </div>
-        <div class="two">
-          <div><div class="eyebrow">Men in the field (thousands)</div><svg class="chart" id="cMen" role="img" aria-label="Men in the field, June 1941 to May 1942"></svg></div>
-          <div><div class="eyebrow">Tanks at the front (Soviet) and in the east (German)</div><svg class="chart" id="cTanks" role="img" aria-label="Tanks, June 1941 to May 1942"></svg></div>
-        </div>
-        <p class="note">Soviet men: the field forces in the west. German men: the army in the east. Shaded bands are the 10th–90th percentile.</p>
-      </section>
-
-      <section>
-        <details>
-          <summary>How the model works</summary>
-          <div class="method">
-            <ul>
-              <li><b>Baseline.</b> Krivosheev's 1941 operations by phase (frontier, summer, autumn) and sector (Army Groups North, Centre, South), with their losses, durations and depths; Halder's German casualties; Bekker's Luftwaffe losses; Soviet tank stocks of 22,600 (June 1941) and 7,700 (January 1942).</li>
-              <li><b>Pace.</b> Each phase's speed is the German-to-Soviet combat power ratio, relative to reality, raised to an uncertain power, times a readiness factor while the Soviets are alerted (slower frontier battles). Autumn progress slows in the mud (10 October–15 November) and again in the frost, and stops at the supply cap.</li>
-              <li><b>Pockets.</b> The men in a pocket scale with Soviet strength; the share captured scales with German sealing power (infantry and the Luftwaffe) against the Soviet men, and with how fast the pincers close; a leak factor divides it in the frontier and summer battles while the Soviets are alerted. Men are conserved: escapers partly become casualties, and extra prisoners are not also counted as killed.</li>
-              <li><b>Fighting losses.</b> Soviet killed and wounded scale with Soviet strength, German combat power and the length of each phase. German casualties follow the Soviet killed and wounded and the German men engaged, lowered by air support and raised by the alert's fighting effect.</li>
-              <li><b>Equipment.</b> Soviet tanks lost follow the tanks engaged; guns follow pockets and fighting; aircraft follow Luftwaffe strength, with fewer destroyed on the ground when alerted. German tanks and aircraft follow Soviet opposition and the Luftwaffe's own size.</li>
-              <li><b>Winter.</b> Soviet strike power and German defence are each a weighted product of men, tanks and aircraft relative to reality. Soviet losses scale with how hard they attack; German losses with the pressure and the German men in the line. Sickness and frost scale with men and time.</li>
-              <li><b>Spring.</b> Stocks carry forward with production (German output for the army raised; Soviet output lowered without Lend-Lease) and replacements. The Moscow offensive's pace is a Typhoon-like 20–30 km a day scaled by the force ratio and cut by the prepared defences.</li>
-            </ul>
-            <p class="note">Two results are assumptions rather than findings: the ground taken in 1941, set by the supply limit, and the article's pace of the Moscow offensive, set chiefly by the assumed strength of the Moscow defences. An independent review of the first version found errors in the loss formulas, the lever wiring and the winter balance; they are corrected in this version, and the real run is checked against the baseline for any draw of the uncertain parameters. The ranges cover uncertainty in the strength of each mechanism, not in the model's structure. Figures marked approximate in the source file (some autumn equipment losses, the Soviet field strengths, the spring 1942 stocks) are estimates. The model is a check on the scenario's internal consistency, not a forecast.</p>
-          </div>
-        </details>
-        <details>
-          <summary>Sources</summary>
-          <div class="method"><ul>
-            <li>G. F. Krivosheev, <i>Soviet Casualties and Combat Losses in the Twentieth Century</i> (operations and quarters of 1941–42), via the Wikipedia articles on each operation.</li>
-            <li>F. Halder, war diary: German casualties to 3 July, 13 August and 31 December 1941; D. Stahel for 26 Nov. 1941–28 Feb. 1942.</li>
-            <li>C. Bekker, Luftwaffe losses by period, 1941–42; S. Zaloga on Soviet tank stocks; D. Glantz and J. House on force strengths.</li>
-            <li>Areas: the real front lines of 1941 and an approximate line of May 1942, measured on the plate's projection.</li>
-          </ul></div>
-        </details>
+        <details><summary data-t="method.h">How the model works</summary><div class="method"><ul>
+          <li data-t="method.state"><b>State.</b> Each month: German men, tanks and aircraft in the east; Soviet field men, tanks and aircraft; the depth of the front on three axes (Leningrad, Moscow, the south, with the Caucasus as a branch); the railheads and supply reach on each; the Soviet production base.</li>
+          <li data-t="method.pace"><b>Pace.</b> The spearheads' pace is a calibrated open-season rate times the force ratio (a weighted mix of men, tanks and aircraft) to a small, uncertain power (about 0.3) in open country, where the spearheads moved as supply allowed whatever the odds, and to a large one (about 0.7) in a set-piece attack on a held front (Moscow beyond the Mozhaisk line in 1941; the attack of 1942), where force decides, times a season factor (mud in October, frost from November, the thaw in April), and it cannot go beyond the supply reach plus a short overrun. The reach is the railhead plus what lorries can bridge; the railheads follow the front at a limited rate and lag behind it (less in 1942, when the Dnieper bridges and the Donbas network were in use); lorries manage about a third as much in mud and snow, which is what halts Typhoon in the model; a division brings its own transport, so the levers for lorries and fuel are net of what the extra divisions use.</li>
+          <li data-t="method.decisions"><b>Decisions.</b> After Smolensk the Centre recovers (Yelnya, replacements, stocks) and, if the Kiev diversion is on, sends its panzers south; Typhoon opens at the real date, brought forward by an uncertain share of an earlier Smolensk, and two to four weeks earlier without the diversion, at the cost of a flank to cover; beyond the Mozhaisk line the drive on Moscow is a set-piece attack against the Reserve Front and the Moscow defence zone, whose strength grows with the calendar and with Soviet mobilization; the south's slow start and the Luga Line are calibrated factors. In 1942 the Germans attack Moscow first (if set), then the south; a set-piece attack on a held front moves at a fraction of the open pace, cut further by the Moscow defences, and is spent after one to two months if the city has not fallen. Soviet choices: defence in depth, withdrawing from Kiev, stopping the winter offensive in January, no Kharkov offensive.</li>
+          <li data-t="method.pockets"><b>Pockets.</b> Prisoners follow the Soviet men present, the weighted advance, how far forward the Soviets stand, German sealing power (infantry and aircraft), and the alert's leakage in the first two months.</li>
+          <li data-t="method.attrition"><b>Attrition.</b> Soviet killed and wounded follow German combat power and the intensity of the month, more when the Red Army is attacking (the winter, May 1942, the second half of 1942); German casualties follow Soviet power and intensity. Tanks and aircraft are lost as a share of stock each month, more in 1941 than 1942, plus the tanks left in pockets.</li>
+          <li data-t="method.production"><b>Production and men.</b> Soviet output follows the real monthly figures, moved by the difference in territory lost (and Moscow's factories); mobilization follows the real inflow; Lend-Lease adds tanks and aircraft from October 1941. German replacements and arrivals follow the real flow, raised by the output and replacement levers.</li>
+          <li data-t="method.reserves"><b>Reserves.</b> The Stavka's weight between the three axes is a choice (in reality the Kiev group of fronts in 1941, Moscow in 1942). An axis holding more than its real share is harder to attack, most of all by a set-piece attack, and yields smaller pockets; one holding less is easier. Moscow is also the hub of the railways: if it falls, the Stavka's capacity to move reserves between theatres drops to an uncertain half to four-fifths (the Volga bypass lines were fewer and slower), half of the loss made good over a year. Fewer reserves then reach the south, which raises the pressure on Stalingrad and cuts the reserves that can be brought to the Don for the November counter-offensive; the winter counter-offensive of 1941–42, whose reserve armies formed around Moscow, is weakened likewise.</li>
+          <li data-t="method.weather"><b>Weather.</b> How much of October and November 1941 and of the spring of 1942 is lost to mud is drawn for each run, for reality too, so the real settings now give a spread of outcomes around the calibrated run rather than a single one; the calibrated run is the middle of that spread.</li>
+          <li data-t="method.winter"><b>The winter.</b> The Soviet counter-offensive regains ground on the Moscow axis in proportion to the strength ratio. Tikhvin is retaken in December if the Soviets are strong enough relative to the real winter; if not, Leningrad has no route across Lake Ladoga and capitulates after two to four months.</li>
+          <li data-t="method.stalingrad"><b>Stalingrad and Uranus.</b> Once the Volga is reached, pressure on the city accumulates with the force ratio and air power; it falls if the pressure passes the real total, which did not suffice, by a margin. The November counter-offensive breaks through if the Soviet reserve power against the German flank reaches a share of the real ratio, which did suffice.</li>
+          <li data-t="method.uncertainty"><b>Uncertainty.</b> Each mechanism's strength is drawn from a range that acts only on departures from the real war, so the real settings always return the calibrated real run.</li>
+        </ul><p class="note" data-t="method.note">An independent review of this version found and I corrected: the Moscow defences had raised Soviet rather than German losses; the German losses of the Moscow attack were understated; the Centre's panzers were counted in the south and at Moscow at once in September; the Luftwaffe was counted twice at Stalingrad, and pressure went on accruing after November; Blue could open in May or never; one uncertainty range leaked into the real run. Calibration: the real run matches the real dates of Minsk, Smolensk, Vyazma, Kiev, Kharkov, Rostov, Daugavpils, Pskov, Shlisselburg, Tikhvin, Voronezh, the Volga, Maikop and Mozdok within a few days to three weeks; the Dec 1941 and 1942 depths, Soviet and German casualties, prisoners, tank and aircraft losses and strengths within about 12 per cent. Two judgements are not calibrated against anything: how far a 1942 set-piece attack on Moscow would get (set so that the real 1942 German army would succeed about half the time at the default defences), and the threshold at which Moscow falls in 1941 (80 km beyond the real halt). The model does not take Leningrad by assault, and it does not decide; the decisions are levers.</p></div></details>
       </section>
     </main>
   </div>
 </div>
 <div id="tip" role="tooltip"></div>
-
 <script src="model.js"></script>
 <script>
 (function () {
 'use strict';
-const M = window.HalifaxModel;
-const N_RUNS = 1500;
+const M = window.EFModel; M.setRef();
+const N_RUNS = 600;
+// ---------------------------------------------------------------- language
+let lang = 'en';
+try { const s = localStorage.getItem('efm-lang'); lang = s === 'ru' || s === 'en' ? s : (/^ru/i.test(navigator.language || '') ? 'ru' : 'en'); } catch (e) { lang = 'en'; }
+const RU = {
+  // static blocks (by key)
+  'title': 'Модель Восточного фронта, 1941–42',
+  'eyebrow': 'Сценарий Галифакса · помесячная модель кампании · июнь 1941 — декабрь 1942',
+  'h1': 'Модель Восточного фронта, 1941–42',
+  'lede': 'Помесячная модель германо-советской войны. Каждый месяц она переносит вперёд численность людей, танков и самолётов обеих сторон, германские головные станции и плечо подвоза на трёх направлениях и советскую производственную базу и сдвигает фронт по дюжине механизмов. Её константы подобраны так, чтобы при реальных решениях воспроизводились реальный фронт и реальные потери обоих лет; допущения, приведённые ниже, затем разыгрывают сценарий. Результаты — медиана 600 прогонов, с 10-м и 90-м процентилями там, где это существенно.',
+  'assumptions': 'Допущения', 'scenario': 'Сценарий', 'reality': 'Реальность',
+  'front.h': 'Фронт по месяцам',
+  'front.sub': 'Каждая дорога — одно направление германского наступления; города отмечены по их расстоянию от границы июня 1941. Сплошная полоса показывает, докуда фронт модели дошёл к выбранному месяцу (медианный прогон; бледное продолжение — 10–90-й процентили); полый маркер — реальный фронт в том же месяце. Полоса, прошедшая город, означает, что город пал. Ленинград блокируется, а не штурмуется, поэтому северная дорога кончается у Тихвина.',
+  'front.month': 'Месяц', 'legend.model': 'Фронт модели', 'legend.range': 'Разброс прогонов', 'legend.real': 'Реальный фронт',
+  'events.h': 'События',
+  'loss.h': 'Потери и численность',
+  'loss.sub': 'Советские потери на основе Кривошеева; пленные по германскому счёту; германские потери на основе Гальдера. Численность — действующие войска (советские) и армия на Востоке (германская).',
+  'mv.h': 'Что определяет результат',
+  'mv.sub': 'Над чертой: от реальности к сценарию, по одному изменению посылки за раз в перечисленном порядке (вклад изменения зависит от того, что было до него), затем изменения ползунков, если настройки слева отличаются от сценария. Под чертой: насколько каждый неопределённый механизм модели, переведённый от одного края своего диапазона к другому, мог бы сдвинуть результат при настройках слева; восемь наиболее значимых.',
+  'mv.result': 'Результат',
+  'method.h': 'Как работает модель',
+  'method.state': '<b>Состояние.</b> Каждый месяц: германские люди, танки и самолёты на Востоке; советские действующие войска, танки и самолёты; глубина фронта на трёх направлениях (Ленинград, Москва, юг, с Кавказом как ответвлением); головные станции и плечо подвоза на каждом; советская производственная база.',
+  'method.pace': '<b>Темп.</b> Темп ударных группировок — калиброванная скорость сухого сезона, умноженная на соотношение сил (взвешенная смесь людей, танков и самолётов) в малой неопределённой степени (около 0,3) на открытой местности, где группировки шли так, как позволяло снабжение, при любом соотношении, и в большой (около 0,7) при подготовленном наступлении на удерживаемый фронт (Москва за Можайской линией в 1941; наступление 1942 года), где решает сила, и на сезонный множитель (распутица в октябре, морозы с ноября, оттепель в апреле); выйти за плечо подвоза плюс короткий перехлёст он не может. Плечо подвоза — головная станция плюс то, что перекрывает автотранспорт; головные станции следуют за фронтом с ограниченной скоростью и отстают от него (меньше в 1942, когда действовали днепровские мосты и донбасская сеть); в грязи и снегу автотранспорт справляется примерно с третью обычного, что в модели и останавливает «Тайфун»; дивизия везёт свой транспорт с собой, поэтому рычаги автотранспорта и горючего даны за вычетом нужд добавочных дивизий.',
+  'method.decisions': '<b>Решения.</b> После Смоленска «Центр» восстанавливается (Ельня, пополнение, запасы) и, если включён поворот на Киев, посылает танки на юг; «Тайфун» начинается в реальный срок, сдвинутый вперёд на неопределённую долю выигрыша под Смоленском, и на две–четыре недели раньше без поворота, ценой фланга, который надо прикрывать; за Можайской линией наступление на Москву — подготовленный штурм Резервного фронта и Московской зоны обороны, чья сила растёт с календарём и советской мобилизацией; медленное начало на юге и Лужский рубеж — калиброванные множители. В 1942 германская армия сначала наступает на Москву (если задано), затем на юг; подготовленное наступление на удерживаемый фронт идёт с долей открытого темпа, дополнительно урезанной московской обороной, и выдыхается через один–два месяца, если город не пал. Советские решения: оборона в глубину, отход от Киева, остановка зимнего наступления в январе, отказ от Харьковского наступления.',
+  'method.pockets': '<b>Котлы.</b> Число пленных определяется наличными советскими войсками, взвешенным продвижением, тем, насколько выдвинуты вперёд советские войска, германской силой замыкания (пехота и авиация) и просачиванием из котлов в первые два месяца при заблаговременной готовности.',
+  'method.attrition': '<b>Истощение.</b> Советские убитые и раненые определяются германской боевой мощью и напряжённостью месяца, больше при наступлении Красной армии (зима, май 1942, вторая половина 1942); германские потери — советской силой и напряжённостью. Танки и самолёты теряются как доля наличного парка каждый месяц, в 1941 больше, чем в 1942, плюс танки, оставленные в котлах.',
+  'method.production': '<b>Производство и люди.</b> Советский выпуск следует реальным помесячным цифрам, сдвинутым на разницу в потерянной территории (и московские заводы); мобилизация следует реальному притоку; ленд-лиз добавляет танки и самолёты с октября 1941. Германское пополнение и прибытие войск следуют реальному потоку, увеличенному рычагами производства и пополнения.',
+  'method.reserves': '<b>Резервы.</b> Распределение сил Ставки между тремя направлениями — выбор (в реальности Киевская группа фронтов в 1941, Москва в 1942). Направление, держащее больше реальной доли, труднее атаковать, особенно подготовленным наступлением, и оно даёт меньшие котлы; держащее меньше — легче. Москва также узел железных дорог: если она падает, способность Ставки перебрасывать резервы между театрами снижается до неопределённых половины — четырёх пятых (обходные волжские линии были малочисленнее и медленнее), половина потери восполняется за год. Тогда на юг доходит меньше резервов, что усиливает давление на Сталинград и урезает резервы, которые можно подвести к Дону для ноябрьского контрнаступления; зимнее контрнаступление 1941–42, чьи резервные армии формировались вокруг Москвы, ослабляется так же.',
+  'method.weather': '<b>Погода.</b> Какая часть октября и ноября 1941 и весны 1942 теряется из-за распутицы, разыгрывается для каждого прогона, и для реальности тоже, так что реальные настройки дают теперь разброс исходов вокруг калиброванного прогона, а не единственный исход; калиброванный прогон — середина этого разброса.',
+  'method.winter': '<b>Зима.</b> Советское контрнаступление возвращает территорию на московском направлении пропорционально соотношению сил. Тихвин отбивается в декабре, если советские войска достаточно сильны относительно реальной зимы; если нет, у Ленинграда нет пути через Ладожское озеро, и он капитулирует через два–четыре месяца.',
+  'method.stalingrad': '<b>Сталинград и «Уран».</b> После выхода к Волге давление на город накапливается с соотношением сил и авиацией; город падает, если давление превосходит реальный итог, которого не хватило, с запасом. Ноябрьское контрнаступление прорывает фронт, если сила советских резервов против германского фланга достигает доли реального соотношения, которого хватило.',
+  'method.uncertainty': '<b>Неопределённость.</b> Сила каждого механизма разыгрывается из диапазона, который действует только на отклонения от реальной войны, так что реальные настройки всегда возвращают калиброванный реальный прогон.',
+  'method.note': 'Независимая проверка этой версии нашла, а я исправил: московская оборона увеличивала советские, а не германские потери; германские потери при наступлении на Москву были занижены; танки «Центра» в сентябре считались одновременно на юге и под Москвой; люфтваффе под Сталинградом считалось дважды, а давление продолжало накапливаться после ноября; «Блау» могла начаться в мае или никогда; один диапазон неопределённости просачивался в реальный прогон. Калибровка: реальный прогон совпадает с реальными датами Минска, Смоленска, Вязьмы, Киева, Харькова, Ростова, Даугавпилса, Пскова, Шлиссельбурга, Тихвина, Воронежа, выхода к Волге, Майкопа и Моздока с точностью от нескольких дней до трёх недель; глубины декабря 1941 и 1942, советские и германские потери, пленные, потери и численность танков и самолётов — с точностью около 12%. Два суждения ни по чему не калиброваны: докуда дошло бы подготовленное наступление на Москву в 1942 (задано так, чтобы реальная германская армия 1942 года при обороне по умолчанию добивалась успеха примерно в половине случаев) и порог, при котором Москва падает в 1941 (80 км за реальной точкой остановки). Модель не берёт Ленинград штурмом и не принимает решений; решения — это рычаги.',
+  // generated text (by English string)
+  'Running…': 'Расчёт…', '{n} runs in {ms} ms': '{n} прогонов за {ms} мс', 'Custom': 'Своя настройка', 'Scenario': 'Сценарий', 'Reality': 'Реальность',
+  'Play': 'Пуск', 'Stop': 'Стоп', 'frontier': 'граница', 'To Leningrad': 'На Ленинград', 'To Moscow': 'На Москву', 'To Stalingrad': 'На Сталинград', 'Caucasus, from Rostov': 'Кавказ, от Ростова',
+  'Model {km} km ({lo}–{hi})': 'Модель {km} км ({lo}–{hi})', 'Reality {km} km': 'Реальность {km} км',
+  'Start and the Soviet side': 'Начало войны и советская сторона', 'German strength and supply': 'Германские силы и снабжение', 'German decisions': 'Германские решения',
+  'Invasion begins': 'Начало вторжения', '1 June 1941': '1 июня 1941', '22 June 1941': '22 июня 1941',
+  'Soviet men in the western districts': 'Советские войска в западных округах', 'Reality 2.9 million; scenario 3.7 million.': 'В реальности 2,9 млн; в сценарии 3,7 млн.',
+  'Soviets alerted beforehand': 'Советские войска приведены в готовность заранее', 'Slower frontier battles, leakier pockets, fewer aircraft caught on the ground. 0% is reality.': 'Медленнее приграничные сражения, менее плотные котлы, меньше самолётов уничтожено на земле. 0% — реальность.',
+  'Far East forces held back': 'Дальневосточные войска удержаны на месте', 'Lend-Lease to the Soviet Union': 'Ленд-лиз Советскому Союзу', 'Soviet output, 1942': 'Советское производство, 1942',
+  'Soviet choice: defend in depth at the frontier': 'Советский выбор: оборона в глубину у границы', 'Soviet choice: withdraw from Kiev in August': 'Советский выбор: отход от Киева в августе', 'Soviet choice: stop the winter offensive in January': 'Советский выбор: остановить зимнее наступление в январе', 'Soviet choice: no Kharkov offensive in May 1942': 'Советский выбор: без Харьковского наступления в мае 1942',
+  'Stavka\'s weight in 1941': 'Главные силы Ставки в 1941', 'the Kiev group of fronts (as in reality)': 'Киевская группа фронтов (как в реальности)', 'before Moscow': 'перед Москвой', 'spread evenly': 'равномерно',
+  'Stavka\'s weight in 1942': 'Главные силы Ставки в 1942', 'before Moscow (as in reality)': 'перед Москвой (как в реальности)', 'the south': 'на юге', 'In reality the Stavka expected the 1942 blow at Moscow and kept its reserves there, which is why Blue broke through.': 'В реальности Ставка ждала удара 1942 года под Москвой и держала резервы там, отчего «Блау» и прорвала фронт.',
+  'German men in the east': 'Германские войска на Востоке', 'German tanks at the start': 'Германские танки в начале кампании', 'Luftwaffe in the east': 'Люфтваффе на Востоке', 'German tank output for the east': 'Германский выпуск танков для Востока', 'German replacements': 'Германское пополнение',
+  'Lorries at the front, net of what the extra divisions use': 'Автотранспорт на фронте за вычетом нужд добавочных дивизий', 'The supply reach beyond the railheads. The premise adds about a fifth more lorries, but the extra divisions and aircraft use most of them; the scenario keeps a tenth. At a fifth, Moscow falls in October 1941 in most runs.': 'Плечо подвоза за головными станциями. Посылка добавляет около пятой части грузовиков, но добавочные дивизии и авиация поглощают большую их часть; в сценарии остаётся десятая часть. При пятой части Москва в большинстве прогонов падает в октябре 1941.',
+  'Fuel at the front, net': 'Горючее на фронте, нетто', 'Railhead conversion rate': 'Темп перешивки железных дорог', 'Supply limits the advance': 'Снабжение ограничивает продвижение', 'Off: the spearheads go as far as their pace allows.': 'Выключено: ударные группировки идут так далеко, как позволяет темп.',
+  'The Centre\'s panzers go south to Kiev in August 1941': 'Танки «Центра» поворачивают на юг, к Киеву, в августе 1941', 'As in reality. Off: Typhoon opens two to four weeks earlier (the Centre needed the rest of the time to recover anyway), the Kiev pocket is far smaller, and part of the Centre covers the uncovered southern flank. Typhoon otherwise opens at the real date, brought forward by part of an earlier Smolensk.': 'Как в реальности. Выключено: «Тайфун» начинается на две–четыре недели раньше (остальное время «Центру» всё равно требовалось на восстановление), Киевский котёл намного меньше, часть «Центра» прикрывает открытый южный фланг. В остальных случаях «Тайфун» начинается в реальный срок, сдвинутый вперёд на часть выигрыша под Смоленском.',
+  'Moscow falls once the Centre is this far beyond the real halt': 'Москва падает, когда «Центр» уходит настолько дальше реальной точки остановки', 'An assumption: 80 km is an envelopment of the city. The real halt was about 30 km from the Kremlin.': 'Допущение: 80 км — охват города. Реальная остановка — около 30 км от Кремля.',
+  'Attack Moscow first in 1942': 'В 1942 сначала наступать на Москву', 'Moscow defences in 1942 slow the attack by': 'Московская оборона 1942 года замедляет наступление на', 'At the default 65% the real 1942 German army would take Moscow about half the time. Kursk-like defences are about 80%.': 'При 65% по умолчанию реальная германская армия 1942 года брала бы Москву примерно в половине случаев. Оборона курского типа — около 80%.',
+  'Southern offensive (Blue) opens': 'Южное наступление («Блау») начинается', 'after the Moscow offensive': 'после наступления на Москву', 'June 1942': 'июнь 1942', 'July 1942 (as in reality)': 'июль 1942 (как в реальности)',
+  'Moscow, 1941': 'Москва, 1941', 'Moscow, 1942': 'Москва, 1942', 'Falls': 'Падает', 'Holds': 'Держится', 'Taken in 1941': 'Взята в 1941', 'Capitulates': 'Капитулирует', 'Breaks through': 'Прорывает фронт', 'Fails': 'Не удаётся',
+  'holds in every run; the front ends December about {km} km short of the city': 'держится во всех прогонах; в конце декабря фронт примерно в {km} км от города', ' (reality {km} km)': ' (в реальности {km} км)', ' · falls in 1942 without a set attack in {p}%': ' · падает в 1942 без специального наступления в {p}%',
+  'falls in {p}% of runs, about {d} ({r}); holds through the year in {q}%': 'падает в {p}% прогонов, около {d} ({r}); держится до конца года в {q}%',
+  'falls in 1941 in every run, so no attack is needed in 1942': 'падает в 1941 во всех прогонах, наступление 1942 года не требуется', 'the attack never takes the city': 'наступление ни разу не берёт город',
+  'falls in {p}% of runs, about {d} ({r})': 'падает в {p}% прогонов, около {d} ({r})', '; in {c}% of the runs where it held through 1941': '; в {c}% прогонов, где она устояла в 1941', ' · the attack is spent short of the city in {p}%, about {d}': ' · наступление выдыхается, не дойдя до города, в {p}%, около {d}',
+  'Leningrad': 'Ленинград', 'falls in {p} of runs, about {d}; Tikhvin retaken in {q}': 'падает в {p} прогонов, около {d}; Тихвин отбит в {q}', 'Tikhvin retaken in {p}% of runs; the Ladoga route holds': 'Тихвин отбит в {p}% прогонов; ладожский путь действует',
+  'Stalingrad': 'Сталинград', 'falls in {p} of runs': 'падает в {p} прогонов', ', about {d}': ', около {d}', ' · Volga reached {d}': ' · выход к Волге {d}', 'never': 'не достигнута',
+  'Caucasus': 'Кавказ', '{km} km beyond Rostov': '{km} км за Ростов', 'Maikop {a} · Grozny {b} · Baku {c}': 'Майкоп {a} · Грозный {b} · Баку {c}',
+  'November counter-offensive': 'Ноябрьское контрнаступление', 'in {p} of runs · Soviet reserve power against the German flank {r} (reality {q})': 'в {p} прогонов · сила советских резервов против германского фланга {r} (в реальности {q})',
+  'Losses, 1941': 'Потери, 1941', 'Losses, 1942': 'Потери, 1942', 'Soviet : German, {r} to 1 (reality {s} : {g}) · prisoners {p}': 'советские : германские, {r} к 1 (в реальности {s} : {g}) · пленных {p}', '{r} to 1 (reality {s} : {g}) · prisoners {p}': '{r} к 1 (в реальности {s} : {g}) · пленных {p}',
+  'Red Army, end of 1942': 'Красная армия, конец 1942', '{m}, {t} tanks': '{m}, {t} танков', 'reality {m}, {t} tanks · production base {p}% of the real': 'в реальности {m}, {t} танков · производственная база {p}% от реальной',
+  'German army in the east, end of 1942': 'Германская армия на Востоке, конец 1942', 'reality {m}, {t} tanks': 'в реальности {m}, {t} танков',
+  'Reality (model)': 'Реальность (модель)', 'Model': 'Модель', 'Article': 'Статья', 'Change': 'Изменение',
+  'Minsk': 'Минск', 'Smolensk': 'Смоленск', 'Typhoon opens': 'Начало «Тайфуна»', 'Shlisselburg: Leningrad cut off': 'Шлиссельбург: Ленинград отрезан', 'Kiev': 'Киев', 'Vyazma': 'Вязьма', 'Kharkov': 'Харьков', 'Rostov': 'Ростов', 'Tikhvin': 'Тихвин', 'Tikhvin retaken': 'Тихвин отбит', 'Leningrad capitulates': 'Ленинград капитулирует', 'Moscow falls': 'Падение Москвы', 'Moscow offensive of 1942 spent': 'Наступление на Москву 1942 года выдохлось', 'Voronezh': 'Воронеж', 'The Volga reached': 'Выход к Волге', 'Stalingrad falls': 'Падение Сталинграда', 'Maikop': 'Майкоп', 'Grozny': 'Грозный', 'Baku': 'Баку',
+  'Daugavpils': 'Даугавпилс', 'Pskov': 'Псков', 'Luga': 'Луга', 'Shlisselburg': 'Шлиссельбург', 'Moscow': 'Москва', 'Astrakhan': 'Астрахань', 'Mozdok': 'Моздок',
+  '1941 (from the invasion)': '1941 (от начала вторжения)', 'Soviet casualties (k)': 'Советские потери (тыс.)', '… of which prisoners (k)': '… в том числе пленные (тыс.)', 'German casualties (k)': 'Германские потери (тыс.)', 'Ratio': 'Соотношение', 'Soviet tanks lost': 'Потеряно советских танков', 'German tanks lost': 'Потеряно германских танков', 'Soviet aircraft lost': 'Потеряно советских самолётов', 'German aircraft lost': 'Потеряно германских самолётов', 'Strengths': 'Численность',
+  'Soviet field forces, Dec. 1941 (k)': 'Советские действующие войска, дек. 1941 (тыс.)', 'Soviet tanks, Dec. 1941': 'Советские танки, дек. 1941', 'German men in the east, Dec. 1941 (k)': 'Германские войска на Востоке, дек. 1941 (тыс.)', 'Soviet field forces, May 1942 (k)': 'Советские действующие войска, май 1942 (тыс.)', 'Soviet tanks, May 1942': 'Советские танки, май 1942', 'German men in the east, May 1942 (k)': 'Германские войска на Востоке, май 1942 (тыс.)', 'German tanks in the east, May 1942': 'Германские танки на Востоке, май 1942', 'Luftwaffe in the east, May 1942': 'Люфтваффе на Востоке, май 1942',
+  'Soviet field forces, Dec. 1942 (k)': 'Советские действующие войска, дек. 1942 (тыс.)', 'Soviet tanks, Dec. 1942': 'Советские танки, дек. 1942', 'German men in the east, Dec. 1942 (k)': 'Германские войска на Востоке, дек. 1942 (тыс.)', 'German tanks in the east, Dec. 1942': 'Германские танки на Востоке, дек. 1942',
+  'Moscow falls in 1941 (% of runs)': 'Падение Москвы в 1941 (% прогонов)', 'Moscow falls in 1942 (% of runs)': 'Падение Москвы в 1942 (% прогонов)', 'Leningrad capitulates (% of runs)': 'Капитуляция Ленинграда (% прогонов)', 'Stalingrad falls (% of runs)': 'Падение Сталинграда (% прогонов)', 'November counter-offensive breaks through (% of runs)': 'Прорыв ноябрьского контрнаступления (% прогонов)', 'Casualty ratio, 1941': 'Соотношение потерь, 1941', 'Prisoners, 1941 (k)': 'Пленные, 1941 (тыс.)', 'Depth on the Moscow axis, Dec. 1941 (km)': 'Глубина на московском направлении, дек. 1941 (км)', 'Soviet field forces, Dec. 1942 (k)': 'Советские действующие войска, дек. 1942 (тыс.)', 'Caucasus, km beyond Rostov, Dec. 1942': 'Кавказ, км за Ростов, дек. 1942',
+  'Moscow first in 1942, then the south': 'В 1942 сначала Москва, затем юг', 'Invasion on 1 June': 'Вторжение 1 июня', 'Soviets alerted, 3.7m men in the west': 'Советские войска в готовности, 3,7 млн на западе', 'More German men and tanks': 'Больше германских войск и танков', 'Larger Luftwaffe': 'Больше люфтваффе', 'German output and replacements': 'Германское производство и пополнение', 'More lorries and fuel, net of the extra divisions': 'Больше автотранспорта и горючего, нетто', 'No Lend-Lease': 'Без ленд-лиза',
+  'Your slider changes': 'Ваши изменения ползунков', 'Your settings': 'Ваши настройки', 'The scenario': 'Сценарий', 'your settings': 'ваши настройки', 'the scenario': 'сценарий',
+  'Computing… {p}%': 'Расчёт… {p}%', 'How sure the model is: what each uncertain mechanism could shift {x} by': 'Насколько уверена модель: насколько каждый неопределённый механизм мог бы сдвинуть {x}', 'How sure the model is (computing…)': 'Насколько уверена модель (расчёт…)', 'How sure the model is: computing…': 'Насколько уверена модель: расчёт…', 'none of the uncertain mechanisms moves this result': 'ни один неопределённый механизм не сдвигает этот результат',
+  'change from the step before: {d}': 'изменение против предыдущего шага: {d}', 'at the low end of its range: {v}': 'на нижнем краю диапазона: {v}', 'at the high end: {v}': 'на верхнем краю: {v}', 'middle: {v}': 'середина: {v}',
+  'October mud': 'Октябрьская распутица', 'November mud and frost': 'Ноябрьская распутица и морозы', 'Spring thaw': 'Весенняя распутица', 'Weight of the Stavka’s allocation': 'Вес распределения резервов Ставкой', 'Force ratio and the pace in open country': 'Соотношение сил и темп на открытой местности', 'Force ratio in a set-piece attack': 'Соотношение сил при подготовленном наступлении', 'Railhead rate and the rail lever': 'Темп восстановления дорог и рычаг железных дорог', 'Lorry reach and the supply levers': 'Плечо подвоза и рычаги снабжения', 'Pockets: sealing, posture, leakage': 'Котлы: замыкание, построение, просачивание', 'Soviet losses and German power': 'Советские потери и германская сила', 'German losses and Soviet power': 'Германские потери и советская сила', 'Alert: slower first two months': 'Готовность: медленнее первые два месяца', 'Alert: leakier pockets': 'Готовность: менее плотные котлы', 'Alert: aircraft saved on the ground': 'Готовность: самолёты спасены на земле', 'Alert: depth in August and September': 'Готовность: глубина в августе и сентябре', 'Railheads helped by the earlier start': 'Головные станции при более раннем начале', 'Winter regain and the strength ratio': 'Зимнее возвращение территории и соотношение сил', 'Strength of the Moscow defences': 'Прочность московской обороны', 'Pressure needed at Stalingrad': 'Давление, нужное под Сталинградом', 'Reserve ratio needed in November': 'Соотношение резервов, нужное в ноябре', 'Months before the Moscow attack is spent': 'Месяцев до истощения наступления на Москву', 'Moscow as the railway hub: reserves moved between theatres': 'Москва как железнодорожный узел: переброска резервов', 'An earlier Smolensk brings Typhoon forward': 'Более ранний Смоленск приближает «Тайфун»', 'Weeks gained without the Kiev diversion': 'Недели, выигранные без поворота на Киев', 'Strength held back for the open southern flank': 'Силы, удержанные для открытого южного фланга', 'Ratio needed to retake Tikhvin': 'Соотношение, нужное для возврата Тихвина', 'Months Leningrad holds after Tikhvin': 'Месяцев Ленинград держится после Тихвина', 'Moscow defences and the Soviet reserves': 'Московская оборона и советские резервы',
+};
+const t = s => (lang === 'ru' && RU[s] != null) ? RU[s] : s;
+const tf = (s, v) => t(s).replace(/\{(\w+)\}/g, (_, kk) => v[kk]);
+const plural = (n, forms) => { const a = Math.abs(Math.round(n)) % 100, b = a % 10; return (a > 10 && a < 20) ? forms[2] : (b > 1 && b < 5) ? forms[1] : b === 1 ? forms[0] : forms[2]; };
+const tanks = n => lang === 'ru' ? plural(n, ['танк', 'танка', 'танков']) : 'tanks';
+const EN = {}; for (const e of document.querySelectorAll('[data-t]')) EN[e.getAttribute('data-t')] = e.innerHTML;
+// ---------------------------------------------------------------- numbers and dates
+const nfEn = new Intl.NumberFormat('en-GB'), nfRu = new Intl.NumberFormat('ru-RU');
+const k = v => { const n = Math.round(v); return lang === 'ru' ? (Math.abs(n) < 10000 ? String(n) : nfRu.format(n)) : nfEn.format(n); };
+const dec = (v, d) => lang === 'ru' ? v.toFixed(d).replace('.', ',') : v.toFixed(d);
+const men = v => v >= 1000 ? dec(v / 1000, 2) + (lang === 'ru' ? ' млн' : 'm') : Math.round(v) + (lang === 'ru' ? ' тыс.' : 'k');
+const kk = v => k(v) + (lang === 'ru' ? ' тыс.' : 'k');
+const MON_EN = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+const MON_RU = ['янв.', 'февр.', 'марта', 'апр.', 'мая', 'июня', 'июля', 'авг.', 'сент.', 'окт.', 'нояб.', 'дек.'];
+const MONN_RU = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const MON = () => lang === 'ru' ? MON_RU : MON_EN;
+const monthLabel = m => (lang === 'ru' ? MONN_RU[+m.slice(5, 7) - 1] : MON_EN[+m.slice(5, 7) - 1]) + ' ' + m.slice(0, 4);
+const dts = s => { if (!s || !/^\d{4}-\d\d-\d\d$/.test(s)) return '–'; const d = new Date(s + 'T00:00:00Z'); return d.getUTCDate() + ' ' + MON()[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+const dtr = (a, b) => { const x = dts(a), y = dts(b); if (x === '–' || y === '–') return x + '–' + y; const [d1, m1, y1] = x.split(' '), [d2, m2, y2] = y.split(' '); return x === y ? x : y1 !== y2 ? x + '–' + y : m1 !== m2 ? `${d1} ${m1}–${y}` : `${d1}–${y}`; };
+const artDate = s => lang === 'ru' ? s.replace(/[A-Z][a-z]+\.?/g, w => { const i = MON_EN.indexOf(w); return i >= 0 ? MON_RU[i] : w; }) : s;
+// ---------------------------------------------------------------- levers
+const fmtM = v => dec(v / 1000, 2) + (lang === 'ru' ? ' млн' : 'm'), fmtX = v => '×' + dec(v, 2), fmtP = v => Math.round(v * 100) + '%';
 const LEVERS = [
-  { grp: 'Start and Soviet posture' },
+  { grp: 'Start and the Soviet side' },
   { k: 'start', label: 'Invasion begins', type: 'select', opts: [['1941-06-01', '1 June 1941'], ['1941-06-22', '22 June 1941']] },
-  { k: 'sovWest', label: 'Soviet men in the western districts', type: 'range', min: 2900, max: 4200, step: 50, fmt: v => (v / 1000).toFixed(2) + 'm', hint: 'Reality 2.9 million; scenario 3.7 million.' },
-  { k: 'readiness', label: 'Alert: posture', type: 'range', min: 0, max: 1.5, step: 0.05, fmt: v => Math.round(v * 100) + '%', hint: 'Slower frontier battles, leakier pockets, fewer aircraft caught on the ground. 0% is reality.' },
-  { k: 'fighting', label: 'Alert: German losses per Soviet soldier', type: 'range', min: 0, max: 1.5, step: 0.05, fmt: v => Math.round(v * 100) + '%', hint: 'Set to 0% in the scenario: the alert changes the Red Army\'s posture, not its training or command. At 100% the 1941 casualty ratio falls to about 4.6 : 1.' },
-  { k: 'farEastHeld', label: 'Far East forces held back', type: 'range', min: 0, max: 1, step: 0.05, fmt: v => Math.round(v * 100) + '%', hint: 'Share of the real transfers from the Far East kept there.' },
-  { k: 'sovMobExtra', label: 'Extra Soviet mobilization', type: 'range', min: 0, max: 800, step: 25, fmt: v => v + 'k men', hint: 'Men added from the autumn on.' },
-  { grp: 'German strength' },
-  { k: 'gerMen', label: 'German men in the east', type: 'range', min: 3300, max: 4300, step: 50, fmt: v => (v / 1000).toFixed(2) + 'm', hint: 'Reality 3.3 million; scenario 3.9 million.' },
-  { k: 'gerTanks', label: 'German tanks at the start', type: 'range', min: 3600, max: 4400, step: 50, fmt: v => v.toLocaleString('en-GB') },
-  { k: 'lw41', label: 'Luftwaffe in the east, 1941', type: 'range', min: 1, max: 2, step: 0.05, fmt: v => '×' + v.toFixed(2) },
-  { k: 'lw42', label: 'Luftwaffe in the east, 1942', type: 'range', min: 1, max: 2.2, step: 0.05, fmt: v => '×' + v.toFixed(2) },
-  { k: 'lfl2Stays', label: 'Luftflotte 2 stays on the Moscow front in December', type: 'check' },
-  { k: 'replF', label: 'German replacements', type: 'range', min: 1, max: 1.5, step: 0.05, fmt: v => '×' + v.toFixed(2) },
-  { grp: 'Production and supply' },
-  { k: 'gerProd41', label: 'German tank output for the army, 1941', type: 'range', min: 1, max: 1.4, step: 0.05, fmt: v => '×' + v.toFixed(2) },
-  { k: 'gerProd42', label: 'German tank output for the army, 1942', type: 'range', min: 1, max: 1.7, step: 0.05, fmt: v => '×' + v.toFixed(2) },
-  { k: 'sovProd42', label: 'Soviet output, early 1942', type: 'range', min: 0.85, max: 1.05, step: 0.01, fmt: v => '×' + v.toFixed(2) },
+  { k: 'sMen', label: 'Soviet men in the western districts', type: 'range', min: 2900, max: 4200, step: 50, fmt: fmtM, hint: 'Reality 2.9 million; scenario 3.7 million.' },
+  { k: 'alert', label: 'Soviets alerted beforehand', type: 'range', min: 0, max: 1.5, step: 0.05, fmt: fmtP, hint: 'Slower frontier battles, leakier pockets, fewer aircraft caught on the ground. 0% is reality.' },
+  { k: 'farEastHeld', label: 'Far East forces held back', type: 'range', min: 0, max: 1, step: 0.05, fmt: fmtP },
   { k: 'lendLease', label: 'Lend-Lease to the Soviet Union', type: 'check' },
-  { k: 'supplyBonus', label: 'German supply reach beyond the real farthest advance', type: 'range', min: 0, max: 0.1, step: 0.01, fmt: v => '+' + Math.round(v * 100) + '%', hint: 'The runs spread this by −3 to +5 points. It alone decides the ground taken in 1941.' },
+  { k: 'sProdX', label: 'Soviet output, 1942', type: 'range', min: 0.85, max: 1.05, step: 0.01, fmt: fmtX },
+  { k: 'sovDepth', label: 'Soviet choice: defend in depth at the frontier', type: 'check' },
+  { k: 'kievWithdraw', label: 'Soviet choice: withdraw from Kiev in August', type: 'check' },
+  { k: 'winterLimited', label: 'Soviet choice: stop the winter offensive in January', type: 'check' },
+  { k: 'noKharkov', label: 'Soviet choice: no Kharkov offensive in May 1942', type: 'check' },
+  { k: 'stavka41', label: 'Stavka\'s weight in 1941', type: 'select', opts: [['south', 'the Kiev group of fronts (as in reality)'], ['centre', 'before Moscow'], ['balanced', 'spread evenly']] },
+  { k: 'stavka42', label: 'Stavka\'s weight in 1942', type: 'select', opts: [['moscow', 'before Moscow (as in reality)'], ['south', 'the south'], ['balanced', 'spread evenly']], hint: 'In reality the Stavka expected the 1942 blow at Moscow and kept its reserves there, which is why Blue broke through.' },
+  { grp: 'German strength and supply' },
+  { k: 'gMen', label: 'German men in the east', type: 'range', min: 3300, max: 4300, step: 50, fmt: fmtM },
+  { k: 'gTanks', label: 'German tanks at the start', type: 'range', min: 3600, max: 4400, step: 50, fmt: v => k(v) },
+  { k: 'gAirX', label: 'Luftwaffe in the east', type: 'range', min: 1, max: 2, step: 0.05, fmt: fmtX },
+  { k: 'gProdX', label: 'German tank output for the east', type: 'range', min: 1, max: 1.7, step: 0.05, fmt: fmtX },
+  { k: 'gReplX', label: 'German replacements', type: 'range', min: 1, max: 1.5, step: 0.05, fmt: fmtX },
+  { k: 'lorries', label: 'Lorries at the front, net of what the extra divisions use', type: 'range', min: 0.8, max: 1.5, step: 0.05, fmt: fmtX, hint: 'The supply reach beyond the railheads. The premise adds about a fifth more lorries, but the extra divisions and aircraft use most of them; the scenario keeps a tenth. At a fifth, Moscow falls in October 1941 in most runs.' },
+  { k: 'fuel', label: 'Fuel at the front, net', type: 'range', min: 0.8, max: 1.5, step: 0.05, fmt: fmtX },
+  { k: 'railX', label: 'Railhead conversion rate', type: 'range', min: 0.8, max: 1.3, step: 0.05, fmt: fmtX },
+  { k: 'supplyLimit', label: 'Supply limits the advance', type: 'check', hint: 'Off: the spearheads go as far as their pace allows.' },
+  { grp: 'German decisions' },
+  { k: 'kievDiversion', label: 'The Centre\'s panzers go south to Kiev in August 1941', type: 'check', hint: 'As in reality. Off: Typhoon opens two to four weeks earlier (the Centre needed the rest of the time to recover anyway), the Kiev pocket is far smaller, and part of the Centre covers the uncovered southern flank. Typhoon otherwise opens at the real date, brought forward by part of an earlier Smolensk.' },
+  { k: 'moscowKm', label: 'Moscow falls once the Centre is this far beyond the real halt', type: 'range', min: 1040, max: 1200, step: 10, fmt: v => (v - 1000) + (lang === 'ru' ? ' км' : ' km'), hint: 'An assumption: 80 km is an envelopment of the city. The real halt was about 30 km from the Kremlin.' },
+  { k: 'moscow42', label: 'Attack Moscow first in 1942', type: 'check' },
+  { k: 'moscowDef', label: 'Moscow defences in 1942 slow the attack by', type: 'range', min: 0.3, max: 0.9, step: 0.01, fmt: fmtP, hint: 'At the default 65% the real 1942 German army would take Moscow about half the time. Kursk-like defences are about 80%.' },
+  { k: 'blueStart', label: 'Southern offensive (Blue) opens', type: 'select', opts: [['after Moscow', 'after the Moscow offensive'], ['1942-06', 'June 1942'], ['1942-07', 'July 1942 (as in reality)']] },
 ];
 let L = Object.assign({}, M.LEVERS_SCEN);
 const list = document.getElementById('leverList');
-for (const d of LEVERS) {
-  if (d.grp) { const g = document.createElement('div'); g.className = 'grp'; g.textContent = d.grp; list.appendChild(g); continue; }
-  const w = document.createElement('div'); w.className = 'lv' + (d.type === 'check' ? ' check' : '');
-  const id = 'lv_' + d.k;
-  if (d.type === 'check') w.innerHTML = `<label for="${id}"><input type="checkbox" id="${id}"> ${d.label}</label>`;
-  else if (d.type === 'select') w.innerHTML = `<label for="${id}">${d.label}</label><select id="${id}">${d.opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select>`;
-  else w.innerHTML = `<label for="${id}"><span>${d.label}</span><output id="${id}_o"></output></label><input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}">`;
-  if (d.hint) w.insertAdjacentHTML('beforeend', `<div class="hint">${d.hint}</div>`);
-  list.appendChild(w);
-  const el = w.querySelector('#' + id);
-  el.addEventListener('input', () => {
-    L[d.k] = d.type === 'check' ? el.checked : d.type === 'select' ? el.value : +el.value;
-    if (d.fmt) document.getElementById(id + '_o').textContent = d.fmt(L[d.k]);
-    L.label = 'Custom'; setPreset(null); schedule();
-  });
-}
-function syncLevers() {
+function buildLevers() {
+  list.innerHTML = '';
   for (const d of LEVERS) {
-    if (!d.k) continue;
-    const el = document.getElementById('lv_' + d.k);
-    if (d.type === 'check') el.checked = !!L[d.k]; else el.value = L[d.k];
-    if (d.fmt) document.getElementById('lv_' + d.k + '_o').textContent = d.fmt(L[d.k]);
+    if (d.grp) { const g = document.createElement('div'); g.className = 'grp'; g.textContent = t(d.grp); list.appendChild(g); continue; }
+    const w = document.createElement('div'); w.className = 'lv' + (d.type === 'check' ? ' check' : ''); const id = 'lv_' + d.k;
+    if (d.type === 'check') w.innerHTML = `<label for="${id}"><input type="checkbox" id="${id}"> ${t(d.label)}</label>`;
+    else if (d.type === 'select') w.innerHTML = `<label for="${id}">${t(d.label)}</label><select id="${id}">${d.opts.map(o => `<option value="${o[0]}">${t(o[1])}</option>`).join('')}</select>`;
+    else w.innerHTML = `<label for="${id}"><span>${t(d.label)}</span><output id="${id}_o"></output></label><input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}">`;
+    if (d.hint) w.insertAdjacentHTML('beforeend', `<div class="hint">${t(d.hint)}</div>`);
+    list.appendChild(w);
+    const el = w.querySelector('#' + id);
+    el.addEventListener('input', () => { L[d.k] = d.type === 'check' ? el.checked : d.type === 'select' ? el.value : +el.value; if (d.fmt) document.getElementById(id + '_o').textContent = d.fmt(L[d.k]); L.label = 'Custom'; setPreset(null); schedule(); });
   }
 }
-function setPreset(which) {
-  document.getElementById('pScen').classList.toggle('on', which === 'scen');
-  document.getElementById('pReal').classList.toggle('on', which === 'real');
-}
+function syncLevers() { for (const d of LEVERS) { if (!d.k) continue; const el = document.getElementById('lv_' + d.k); if (d.type === 'check') el.checked = !!L[d.k]; else el.value = L[d.k]; if (d.fmt) document.getElementById('lv_' + d.k + '_o').textContent = d.fmt(L[d.k]); } }
+function setPreset(w) { document.getElementById('pScen').classList.toggle('on', w === 'scen'); document.getElementById('pReal').classList.toggle('on', w === 'real'); }
 document.getElementById('pScen').onclick = () => { L = Object.assign({}, M.LEVERS_SCEN); syncLevers(); setPreset('scen'); schedule(); };
 document.getElementById('pReal').onclick = () => { L = Object.assign({}, M.LEVERS_REAL); syncLevers(); setPreset('real'); schedule(); };
 
-// ---------------------------------------------------------------- formatting
-const nf = new Intl.NumberFormat('en-GB');
-const k = v => nf.format(Math.round(v));                       // thousands of men -> "1,234"
-const men = v => v >= 1000 ? (v / 1000).toFixed(2) + 'm' : Math.round(v) + 'k';
-const MON = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
-const dt = s => { const d = new Date(s + 'T00:00:00Z'); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
-const dts = s => { const d = new Date(s + 'T00:00:00Z'); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
-function cell(q, f) { return `<td class="num">${f(q[1])}<span class="rng">${f(q[0])}–${f(q[2])}</span></td>`; }
-function dcell(q) { return `<td class="num">${dts(q[1])}<span class="rng">${dts(q[0])}–${dts(q[2])}</span></td>`; }
-
-// ---------------------------------------------------------------- run
-let timer = null;
-function schedule() { clearTimeout(timer); document.getElementById('status').textContent = 'Running…'; timer = setTimeout(render, 60); }
-let REALQ = null;
+const cell = (q, f) => q ? `<td class="num">${f(q[1])}<span class="rng">${f(q[0])}–${f(q[2])}</span></td>` : '<td class="num">–</td>';
+const dcell = (Q, key) => { const q = Q[key], sh = Q[key + '#share'] ? Q[key + '#share'][0] : 1; if (!q) return '<td class="num">–</td>'; return `<td class="num">${dts(q[1])}${sh < 0.995 ? ' <span class="flag">' + Math.round(sh * 100) + '%</span>' : ''}<span class="rng">${dts(q[0])}–${dts(q[2])}</span></td>`; };
+let timer = null; function schedule() { clearTimeout(timer); document.getElementById('status').textContent = t('Running…'); timer = setTimeout(render, 60); }
+let R = null, QLAST = null, lastMs = 0;
+function pct(q, key) { return Math.round((q[key] ? (key.endsWith('#share') ? q[key][0] : q[key][3]) : 0) * 100) + '%'; }
 function render() {
   const t0 = performance.now();
-  if (!REALQ) REALQ = M.monteCarlo(M.LEVERS_REAL, 600, 7);
-  const Q = M.monteCarlo(L, N_RUNS, 1941), R = REALQ;
-  const r = key => R[key][1];
-  document.getElementById('status').innerHTML = `<b>${L.label}</b> · ${N_RUNS.toLocaleString('en-GB')} runs in ${Math.round(performance.now() - t0)} ms`;
-  // cards
+  if (!R) R = M.monteCarlo(M.LEVERS_REAL, 200, 1941);
+  QLAST = M.monteCarlo(L, N_RUNS, 1941); lastMs = Math.round(performance.now() - t0);
+  draw(); computeMV();
+}
+function draw() {
+  const Q = QLAST; if (!Q) return;
+  document.getElementById('status').innerHTML = `<b>${t(L.label)}</b> · ${tf('{n} runs in {ms} ms', { n: N_RUNS, ms: lastMs })}`;
+  const m41 = Q['moscow.falls1941'][3], m42 = Q['moscow.falls1942'][3], p41 = Math.round(m41 * 100), p42 = Math.round(m42 * 100);
+  const later = !L.moscow42 && m42 > 0.005 ? tf(' · falls in 1942 without a set attack in {p}%', { p: p42 }) : '';
   const C = [
-    ['Soviet casualties, 1941', men(Q['cal1941.sovCas'][1]), `reality ${men(r('cal1941.sovCas'))} · range ${men(Q['cal1941.sovCas'][0])}–${men(Q['cal1941.sovCas'][2])}`],
-    ['German casualties, 1941', k(Q['cal1941.gerCas'][1]) + 'k', `reality ${k(r('cal1941.gerCas'))}k · ratio ${Q['cal1941.ratioAll'][1].toFixed(1)} : 1 (reality ${r('cal1941.ratioAll').toFixed(1)})`],
-    ['Prisoners to 5 Dec. 1941', men(Q['y1941.sov.pris'][1]), `German count · reality ${men(r('y1941.sov.pris'))}`],
-    ['Soviet tanks, 1 Jan. 1942', k(Q['cal1941.sovTanksJan'][1]), `reality ${k(r('cal1941.sovTanksJan'))} · lost in 1941 ${k(Q['cal1941.sovTl'][1])}`],
-    ['Ground retaken in the winter', k(Q['winter.regainArea'][1]) + 'k km²', `reality ${k(r('winter.regainArea'))}k km²`],
-    ['Moscow ring closes, 1942', Q['moscow.close'] ? dt(Q['moscow.close'][1]) : 'Does not close', Q['moscow.close'] ? `in ${Math.round(Q['moscow.close#share'][0] * 100)}% of runs · Moscow entered ${dts(Q['moscow.enter'][1])} · Blue from ${dts(Q['moscow.blueEarliest'][1])}` : 'in no run'],
+    [t('Moscow, 1941'), t(m41 >= 0.5 ? 'Falls' : 'Holds'), m41 < 0.005
+      ? tf('holds in every run; the front ends December about {km} km short of the city', { km: k(Math.max(0, L.moscowKm - Q['end41.depth.C'][1])) }) + (() => { const g = L.moscowKm - Q['end41.depth.C'][1], r = M.LEVERS_REAL.moscowKm - R['end41.depth.C'][1]; return Math.abs(g - r) >= 5 ? tf(' (reality {km} km)', { km: k(Math.max(0, r)) }) : ''; })() + later
+      : tf('falls in {p}% of runs, about {d} ({r}); holds through the year in {q}%', { p: p41, d: dts(Q['moscow.date1941'][1]), r: dtr(Q['moscow.date1941'][0], Q['moscow.date1941'][2]), q: 100 - p41 }) + later],
+    ...(L.moscow42 ? [m41 > 0.995 ? [t('Moscow, 1942'), t('Taken in 1941'), t('falls in 1941 in every run, so no attack is needed in 1942')] : (() => { const held = 1 - m41, c = m42 / held, spent = Q['moscow.spent'], d = Q['moscow.date1942']; return [t('Moscow, 1942'), t(c >= 0.5 ? 'Falls' : 'Holds'), (m42 < 0.005 ? t('the attack never takes the city') : tf('falls in {p}% of runs, about {d} ({r})', { p: p42, d: dts(d[1]), r: dtr(d[0], d[2]) }) + (m41 > 0.05 ? tf('; in {c}% of the runs where it held through 1941', { c: Math.round(c * 100) }) : '')) + (spent && c < 0.995 ? tf(' · the attack is spent short of the city in {p}%, about {d}', { p: 100 - p41 - p42, d: dts(spent[1]) }) : '')]; })()] : []),
+    [t('Leningrad'), t(Q['leningrad.falls'][3] >= 0.5 ? 'Capitulates' : 'Holds'), Q['leningrad.falls'][3] > 0.005 ? tf('falls in {p} of runs, about {d}; Tikhvin retaken in {q}', { p: pct(Q, 'leningrad.falls'), d: Q['leningrad.date'] ? dts(Q['leningrad.date'][1]) : '–', q: pct(Q, 'leningrad.tikhvinRetaken#share') }) : tf('Tikhvin retaken in {p}% of runs; the Ladoga route holds', { p: Math.round(Q['leningrad.tikhvinRetaken#share'][0] * 100) })],
+    [t('Stalingrad'), t(Q['stalingrad.falls'][3] >= 0.5 ? 'Falls' : 'Holds'), tf('falls in {p} of runs', { p: pct(Q, 'stalingrad.falls') }) + (Q['stalingrad.date'] ? tf(', about {d}', { d: dts(Q['stalingrad.date'][1]) }) : '') + tf(' · Volga reached {d}', { d: Q['stalingrad.volga'] ? dts(Q['stalingrad.volga'][1]) : t('never') })],
+    [t('Caucasus'), tf('{km} km beyond Rostov', { km: k(Q['caucasus.depth'][1]) }), tf('Maikop {a} · Grozny {b} · Baku {c}', { a: Q['caucasus.maikop'] ? dts(Q['caucasus.maikop'][1]) : '–', b: Q['caucasus.grozny'] ? dts(Q['caucasus.grozny'][1]) : '–', c: Q['caucasus.baku'] ? dts(Q['caucasus.baku'][1]) : '–' })],
+    [t('November counter-offensive'), t(Q['uranus.breakthrough'][3] >= 0.5 ? 'Breaks through' : 'Fails'), tf('in {p} of runs · Soviet reserve power against the German flank {r} (reality {q})', { p: pct(Q, 'uranus.breakthrough'), r: dec(Q['uranus.ratio'][1], 2), q: dec(R['uranus.ratio'][1], 2) })],
+    [t('Losses, 1941'), `${men(Q['y41.sCas'][1])} : ${kk(Q['y41.gCas'][1])}`, tf('Soviet : German, {r} to 1 (reality {s} : {g}) · prisoners {p}', { r: dec(Q['y41.ratio'][1], 1), s: men(R['y41.sCas'][1]), g: kk(R['y41.gCas'][1]), p: men(Q['y41.pris'][1]) })],
+    [t('Losses, 1942'), `${men(Q['y42.sCas'][1])} : ${kk(Q['y42.gCas'][1])}`, tf('{r} to 1 (reality {s} : {g}) · prisoners {p}', { r: dec(Q['y42.ratio'][1], 1), s: men(R['y42.sCas'][1]), g: kk(R['y42.gCas'][1]), p: men(Q['y42.pris'][1]) })],
+    [t('Red Army, end of 1942'), tf('{m}, {t} tanks', { m: men(Q['end42.sMen'][1]), t: k(Q['end42.sTanks'][1]) }).replace('tanks', tanks(Q['end42.sTanks'][1])).replace('танков', tanks(Q['end42.sTanks'][1])), tf('reality {m}, {t} tanks · production base {p}% of the real', { m: men(R['end42.sMen'][1]), t: k(R['end42.sTanks'][1]), p: Math.round(Q['end42.ind'][1] / R['end42.ind'][1] * 100) }).replace('танков', tanks(R['end42.sTanks'][1]))],
+    [t('German army in the east, end of 1942'), tf('{m}, {t} tanks', { m: men(Q['end42.gMen'][1]), t: k(Q['end42.gTanks'][1]) }).replace('танков', tanks(Q['end42.gTanks'][1])), tf('reality {m}, {t} tanks', { m: men(R['end42.gMen'][1]), t: k(R['end42.gTanks'][1]) }).replace('танков', tanks(R['end42.gTanks'][1]))],
   ];
   document.getElementById('cards').innerHTML = C.map(c => `<div class="card"><div class="k">${c[0]}</div><div class="v">${c[1]}</div><div class="r">${c[2]}</div></div>`).join('');
-  // 1941 table
-  const PHN = { frontier: 'Frontier battles', summer: 'Summer (Smolensk, Kiev, Leningrad)', autumn: 'Autumn (Typhoon, the Donbas, Tikhvin)' };
-  let h = '<thead><tr><th></th><th>Reality</th><th>Model</th><th>Change</th></tr></thead><tbody>';
-  const row = (lab, key, f, sep) => {
-    const q = Q[key], rv = r(key), ch = (q[1] / rv - 1) * 100;
-    return `<tr${sep ? ' class="sep"' : ''}><td>${lab}</td><td class="num">${f(rv)}</td>${cell(q, f)}<td class="num ${ch > 0.5 ? 'diff-up' : ch < -0.5 ? 'diff-dn' : ''}">${ch >= 0 ? '+' : ''}${ch.toFixed(0)}%</td></tr>`;
+  frontChart(Q);
+  // events
+  const EV = [['Minsk', 'events.Minsk', '12 June'], ['Smolensk', 'events.Smolensk', '3 July'], ['Typhoon opens', 'events.Typhoon', '16 Sept.'], ['Shlisselburg: Leningrad cut off', 'events.Shlisselburg', '10 Aug.'], ['Kiev', 'events.Kiev', '29 Aug.'], ['Vyazma', 'events.Vyazma', ''], ['Kharkov', 'events.Kharkov', '9 Oct.'], ['Rostov', 'events.Rostov', '2 Nov.'], ['Tikhvin', 'events.Tikhvin', 'Nov.'], ['Tikhvin retaken', 'leningrad.tikhvinRetaken', ''], ['Leningrad capitulates', 'leningrad.date', '2 Feb. 1942'],
+    ['Moscow falls', 'moscow.date', '26 June 1942'], ['Moscow offensive of 1942 spent', 'moscow.spent', ''], ['Voronezh', 'events.Voronezh', '10 July 1942'], ['The Volga reached', 'stalingrad.volga', '27 Aug. 1942'], ['Stalingrad falls', 'stalingrad.date', '14 Oct. 1942'], ['Maikop', 'caucasus.maikop', '11 Aug. 1942'], ['Grozny', 'caucasus.grozny', '24 Sept. 1942'], ['Baku', 'caucasus.baku', '21 Feb. 1943']];
+  let h = `<thead><tr><th></th><th>${t('Reality (model)')}</th><th>${t('Model')}</th></tr></thead><tbody>`;
+  for (const [lab, key] of EV) h += `<tr><td>${t(lab)}</td><td class="num">${R[key] ? dts(R[key][1]) : '–'}</td>${dcell(Q, key)}</tr>`;
+  document.getElementById('tEvents').innerHTML = h + '</tbody>';
+  // losses
+  const ratio = v => dec(v, 1) + ' : 1';
+  const rows = [['1941 (from the invasion)'], ['Soviet casualties (k)', 'y41.sCas', k], ['… of which prisoners (k)', 'y41.pris', k], ['German casualties (k)', 'y41.gCas', k], ['Ratio', 'y41.ratio', ratio], ['Soviet tanks lost', 'y41.sTl', k], ['German tanks lost', 'y41.gTl', k], ['Soviet aircraft lost', 'y41.sAl', k], ['German aircraft lost', 'y41.gAl', k],
+    ['1942'], ['Soviet casualties (k)', 'y42.sCas', k], ['… of which prisoners (k)', 'y42.pris', k], ['German casualties (k)', 'y42.gCas', k], ['Ratio', 'y42.ratio', ratio], ['Soviet tanks lost', 'y42.sTl', k], ['German tanks lost', 'y42.gTl', k],
+    ['Strengths'], ['Soviet field forces, Dec. 1941 (k)', 'end41.sMen', k], ['Soviet tanks, Dec. 1941', 'end41.sTanks', k], ['German men in the east, Dec. 1941 (k)', 'end41.gMen', k], ['Soviet field forces, May 1942 (k)', 'may42.sMen', k], ['Soviet tanks, May 1942', 'may42.sTanks', k], ['German men in the east, May 1942 (k)', 'may42.gMen', k], ['German tanks in the east, May 1942', 'may42.gTanks', k], ['Luftwaffe in the east, May 1942', 'may42.gAir', k],
+    ['Soviet field forces, Dec. 1942 (k)', 'end42.sMen', k], ['Soviet tanks, Dec. 1942', 'end42.sTanks', k], ['German men in the east, Dec. 1942 (k)', 'end42.gMen', k], ['German tanks in the east, Dec. 1942', 'end42.gTanks', k]];
+  h = `<thead><tr><th></th><th>${t('Reality (model)')}</th><th>${t('Model')}</th><th>${t('Change')}</th></tr></thead><tbody>`;
+  for (const r of rows) { if (r.length === 1) { h += `<tr class="sep"><td colspan="4"><b>${t(r[0])}</b></td></tr>`; continue; } const [lab, key, f] = r; const q = Q[key], rv = R[key][1]; const ch = q ? (q[1] / rv - 1) * 100 : NaN; h += `<tr><td>${t(lab)}</td><td class="num">${f(rv)}</td>${cell(q, f)}<td class="num">${Number.isFinite(ch) ? (ch >= 0 ? '+' : '') + ch.toFixed(0) + '%' : ''}</td></tr>`; }
+  document.getElementById('tLoss').innerHTML = h + '</tbody>';
+}
+// charts
+const tip = document.getElementById('tip'); function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 14, innerWidth - 310) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; } function hideTip() { tip.style.opacity = 0; }
+const NS = 'http://www.w3.org/2000/svg'; function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v); if (parent) parent.appendChild(e); return e; }
+let QCUR = null, mIdx = 6, playing = null;
+function frontChart(Q) { QCUR = Q; roads(); }
+const ROADS = [['N', 'To Leningrad', 1000], ['C', 'To Moscow', 1200], ['S', 'To Stalingrad', 1800]];
+function roads() {
+  if (!QCUR) return; const Q = QCUR, i = mIdx, m = M.MONTHS[i];
+  document.getElementById('mLabel').textContent = monthLabel(m);
+  const svg = document.getElementById('roads'); svg.innerHTML = '';
+  const W = 760, l = 110, r = 24, rowH = 78, top = 10, caucH = 70, H = top + ROADS.length * rowH + caucH + 10; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const scale = 1800, X = km => l + km / scale * (W - l - r);
+  const bar = (y, a, km, lo, hi, real, miles, label) => {
+    const tl = el('text', { x: 0, y: y + 4, class: 'lab' }, svg); tl.textContent = t(label);
+    el('line', { x1: X(0), x2: X(miles[miles.length - 1][1] + 80), y1: y, y2: y, class: 'axis', 'stroke-width': 3 }, svg);
+    miles.forEach(([name, mk], j) => { el('line', { x1: X(mk), x2: X(mk), y1: y - 9, y2: y + 9, stroke: 'var(--muted)', 'stroke-width': 1 }, svg); const tx = el('text', { x: X(mk), y: y + (j % 2 ? -16 : 24), 'text-anchor': 'middle', style: 'font-size:10px' }, svg); tx.textContent = t(name); });
+    const f0 = el('text', { x: X(0), y: y - 16, 'text-anchor': 'middle', style: 'font-size:10px' }, svg); f0.textContent = t('frontier');
+    if (hi > lo) el('rect', { x: X(lo), y: y - 7, width: Math.max(1, X(hi) - X(lo)), height: 14, fill: 'var(--band-ger)', stroke: 'var(--ger)', 'stroke-width': 0.5 }, svg);
+    el('rect', { x: X(0), y: y - 5, width: Math.max(2, X(km) - X(0)), height: 10, rx: 2, fill: 'var(--ger)' }, svg);
+    el('circle', { cx: X(real), cy: y, r: 7, fill: 'var(--panel)', stroke: 'var(--sov)', 'stroke-width': 2.5, opacity: 0.5 }, svg);
+    const hit = el('rect', { x: 0, y: y - 30, width: W, height: 56, fill: 'transparent' }, svg);
+    hit.addEventListener('mousemove', e => showTip(e, `<b>${t(label)}, ${monthLabel(m)}</b><br>${tf('Model {km} km ({lo}–{hi})', { km: k(km), lo: k(lo), hi: k(hi) })}<br>${tf('Reality {km} km', { km: k(real) })}`)); hit.addEventListener('mouseleave', hideTip);
   };
-  for (const ph of ['frontier', 'summer', 'autumn']) {
-    h += `<tr class="sep"><td colspan="4"><b>${PHN[ph]}</b></td></tr>`;
-    h += row('Soviet killed, missing and captured (k)', `y1941.phases.${ph}.tot.irr`, k);
-    h += row('Soviet wounded and sick (k)', `y1941.phases.${ph}.tot.san`, k);
-    h += row('Prisoners, German count (k)', `y1941.phases.${ph}.tot.pris`, k);
-    h += row('Soviet tanks lost', `y1941.phases.${ph}.tot.tl`, k);
-    h += row('German casualties (k)', `y1941.phases.${ph}.gerCas`, k);
-  }
-  h += `<tr class="sep"><td colspan="4"><b>Whole campaign to 5 Dec., with other fronts</b></td></tr>`;
-  h += row('Soviet killed, missing and captured (k)', 'y1941.sov.irr', k);
-  h += row('Soviet wounded and sick (k)', 'y1941.sov.san', k);
-  h += row('Prisoners, German count (k)', 'y1941.sov.pris', k);
-  h += row('Soviet tanks lost', 'y1941.sov.tl', k);
-  h += row('Soviet guns and mortars lost', 'y1941.sov.gl', k);
-  h += row('Soviet aircraft lost', 'y1941.sov.al', k);
-  h += row('German casualties (k)', 'y1941.ger.cas', k);
-  h += row('German killed and missing (k)', 'y1941.ger.km', k);
-  h += row('German tanks lost', 'y1941.ger.tl', k);
-  h += row('German aircraft lost', 'y1941.ger.al', k);
-  h += `<tr class="sep"><td colspan="4"><b>Calendar 1941 (to 31 Dec.)</b></td></tr>`;
-  h += row('Soviet casualties (k)', 'cal1941.sovCas', k);
-  h += row('German casualties (k)', 'cal1941.gerCas', k);
-  h += row('Ratio of all casualties', 'cal1941.ratioAll', v => v.toFixed(1) + ' : 1');
-  h += row('Soviet tanks lost', 'cal1941.sovTl', k);
-  h += row('German tanks lost', 'cal1941.gerTl', k);
-  h += row('Soviet aircraft lost', 'cal1941.sovAl', k);
-  h += row('German aircraft lost', 'cal1941.gerAl', k);
-  document.getElementById('t1941').innerHTML = h + '</tbody>';
-  // dates and ground
-  const ART = { Minsk: '12 June', Smolensk: '3 July', Kiev: '29 Aug.', Shlisselburg: '10 Aug.', autumnStart_C: '16 Sept.' };
-  const DN = { Minsk: 'Minsk falls', Smolensk: 'Smolensk falls', Shlisselburg: 'Lake Ladoga reached at Shlisselburg', Kiev: 'Kiev falls', autumnStart_C: 'Offensive on Moscow (Typhoon) opens' };
-  h = '<thead><tr><th></th><th>Reality</th><th>Model</th><th>Article</th></tr></thead><tbody>';
-  for (const m of ['Minsk', 'Smolensk', 'Shlisselburg', 'Kiev', 'autumnStart_C']) h += `<tr><td>${DN[m]}</td><td class="num">${dts(r('y1941.dates.' + m))}</td>${dcell(Q['y1941.dates.' + m])}<td class="num">${ART[m]}</td></tr>`;
-  h += `<tr class="sep"><td>Ground taken by 5 Dec. (k km²)</td><td class="num">${k(r('y1941.areaTot'))}</td>${cell(Q['y1941.areaTot'], k)}<td class="num">1,398</td></tr>`;
-  for (const [s, nm] of [['N', 'Army Group North'], ['C', 'Army Group Centre'], ['S', 'Army Group South']]) h += `<tr><td>Depth of advance, ${nm} (km)</td><td class="num">${k(r('y1941.depth.' + s))}</td>${cell(Q['y1941.depth.' + s], k)}<td></td></tr>`;
-  for (const [s, nm] of [['C', 'Army Group Centre'], ['S', 'Army Group South']]) h += `<tr><td>Depth the pace would reach without the supply limit, ${nm} (km)</td><td class="num">${k(r('y1941.capacity.' + s))}</td>${cell(Q['y1941.capacity.' + s], k)}<td></td></tr>`;
-  document.getElementById('tDates').innerHTML = h + '</tbody>';
-  // winter
-  h = '<thead><tr><th></th><th>Reality</th><th>Model</th><th>Change</th></tr></thead><tbody>';
-  h += row('Soviet strike force at Moscow: men (k)', 'winter.strike.men', k);
-  h += row('… tanks', 'winter.strike.tanks', k);
-  h += row('… aircraft', 'winter.strike.air', k);
-  h += row('Soviet field forces in December (k)', 'dec1941.sovField', k, true);
-  h += row('Soviet tanks at the front in December', 'dec1941.sovFrontTanks', k);
-  h += row('German men in the east in December (k)', 'dec1941.gerMen', k);
-  h += row('German tanks in the east in December', 'dec1941.gerTanks', k);
-  h += row('Soviet strike power (reality = 1)', 'winter.W', v => v.toFixed(2), true);
-  h += row('German defence (reality = 1)', 'winter.D', v => v.toFixed(2));
-  h += row('Ground retaken (k km²)', 'winter.regainArea', k, true);
-  h += row('German northern shoulder, km from Noginsk', 'winter.shoulderN', k);
-  h += row('German southern shoulder, km from Noginsk', 'winter.shoulderS', k);
-  h += row('Soviet casualties (k)', 'winter.sovCas', k, true);
-  h += row('German casualties (k)', 'winter.gerCas', k);
-  h += row('Ratio of casualties', 'winter.ratio', v => v.toFixed(1) + ' : 1');
-  h += row('Prisoners taken by the Germans (k)', 'winter.pris', k);
-  document.getElementById('tWinter').innerHTML = h + '</tbody>';
-  // spring
-  h = '<thead><tr><th></th><th>Reality</th><th>Model</th><th>Change</th></tr></thead><tbody>';
-  h += row('Soviet field forces (k)', 'may1942.sovField', k);
-  h += row('Soviet tanks at the front', 'may1942.sovFrontTanks', k);
-  h += row('Soviet aircraft at the front', 'may1942.sovFrontAir', k);
-  h += row('German men in the east (k)', 'may1942.gerMen', k);
-  h += row('German tanks in the east', 'may1942.gerTanks', k);
-  h += row('Luftwaffe in the east (aircraft)', 'may1942.lwEast', k);
-  h += row('Soviet offensive towards Kharkov: men (k)', 'kharkov.men', k, true);
-  h += row('… tanks', 'kharkov.tanks', k);
-  h += row('Prisoners when it is cut off at Izyum (k)', 'kharkov.pris', k);
-  document.getElementById('tSpring').innerHTML = h + '</tbody>' +
-    `<tbody><tr class="sep"><td colspan="4"><b>German offensive on Moscow from 20 May 1942</b></td></tr>
-     <tr><td>Force ratio against Typhoon's (1 = as in October 1941)</td><td class="num">${R['moscow.FR'][1].toFixed(2)}</td>${cell(Q['moscow.FR'], v => v.toFixed(2))}<td></td></tr>
-     <tr><td>Pace of the spearheads (km a day)</td><td class="num">${R['moscow.rate'][1].toFixed(0)}</td>${cell(Q['moscow.rate'], v => v.toFixed(0))}<td></td></tr>
-     <tr><td>Share of runs in which the ring closes before the offensive is spent</td><td class="num">${Math.round(R['moscow.close#share'][0] * 100)}%</td><td class="num">${Math.round(Q['moscow.close#share'][0] * 100)}%</td><td></td></tr>
-     <tr><td>Days to close the ring at Noginsk</td><td class="num">${R['moscow.closeDays'][1].toFixed(0)}</td>${cell(Q['moscow.closeDays'], v => v.toFixed(0))}<td class="num">article 15</td></tr>
-     <tr><td>Ring closes (runs in which it closes)</td><td class="num">${R['moscow.close'] ? dts(R['moscow.close'][1]) : '–'}</td>${Q['moscow.close'] ? dcell(Q['moscow.close']) : '<td class="num">–</td>'}<td class="num">article 4 June</td></tr>
-     <tr><td>Prisoners (k; 0 where the ring does not close)</td><td class="num">${k(R['moscow.prisoners'][1])}</td>${cell(Q['moscow.prisoners'], k)}<td class="num">article 350</td></tr>
-     <tr><td>Moscow entered</td><td class="num">${R['moscow.enter'] ? dts(R['moscow.enter'][1]) : '–'}</td>${Q['moscow.enter'] ? dcell(Q['moscow.enter']) : '<td class="num">–</td>'}<td class="num">article 26 June</td></tr>
-     <tr><td>Earliest start in the south (Blue) with forces moved from Moscow</td><td class="num">${R['moscow.blueEarliest'] ? dts(R['moscow.blueEarliest'][1]) : '–'}</td>${Q['moscow.blueEarliest'] ? dcell(Q['moscow.blueEarliest']) : '<td class="num">–</td>'}<td class="num">article 1 July</td></tr></tbody>`;
-  strip(Q, R);
-  lineChart('cMen', [
-    { col: 'var(--ger)', band: 'var(--band-ger)', name: 'German', real: [M.LEVERS_REAL.gerMen, r('dec1941.gerMen'), r('may1942.gerMen')], q: [[L.gerMen, L.gerMen, L.gerMen], Q['dec1941.gerMen'], Q['may1942.gerMen']] },
-    { col: 'var(--sov)', band: 'var(--band-sov)', name: 'Soviet', real: [2900, r('dec1941.sovField'), r('may1942.sovField')], q: [[L.sovWest, L.sovWest, L.sovWest], Q['dec1941.sovField'], Q['may1942.sovField']] },
-  ]);
-  lineChart('cTanks', [
-    { col: 'var(--ger)', band: 'var(--band-ger)', name: 'German', real: [M.LEVERS_REAL.gerTanks, r('dec1941.gerTanks'), r('may1942.gerTanks')], q: [[L.gerTanks, L.gerTanks, L.gerTanks], Q['dec1941.gerTanks'], Q['may1942.gerTanks']] },
-    { col: 'var(--sov)', band: 'var(--band-sov)', name: 'Soviet', real: [12800, r('dec1941.sovFrontTanks'), r('may1942.sovFrontTanks')], q: [[L.readiness > 0 ? 13000 : 12800, L.readiness > 0 ? 13000 : 12800, L.readiness > 0 ? 13000 : 12800], Q['dec1941.sovFrontTanks'], Q['may1942.sovFrontTanks']] },
-  ]);
+  ROADS.forEach(([a, label], ri) => { const q = Q[`months.${i}.depth.${a}`], re = R[`months.${i}.depth.${a}`][1]; bar(top + 28 + ri * rowH, a, q[1], q[0], q[2], re, M.MILES[a], label); });
+  // the Caucasus branch, measured from Rostov
+  const y = top + 28 + ROADS.length * rowH, q = Q[`months.${i}.cauc`], re = R[`months.${i}.cauc`][1];
+  const off = 1000;
+  const tl = el('text', { x: 0, y: y + 4, class: 'lab' }, svg); tl.textContent = t('Caucasus, from Rostov');
+  el('line', { x1: X(off), x2: X(off + 1080), y1: y, y2: y, class: 'axis', 'stroke-width': 3 }, svg);
+  el('line', { x1: X(off), x2: X(off), y1: y - rowH + 20, y2: y, stroke: 'var(--rule)', 'stroke-dasharray': '3 3' }, svg);
+  M.CAUC.forEach(([name, mk], j) => { el('line', { x1: X(off + mk), x2: X(off + mk), y1: y - 9, y2: y + 9, stroke: 'var(--muted)' }, svg); const tx = el('text', { x: X(off + mk), y: y + (j % 2 ? -16 : 24), 'text-anchor': 'middle', style: 'font-size:10px' }, svg); tx.textContent = t(name); });
+  if (q[2] > q[0]) el('rect', { x: X(off + q[0]), y: y - 7, width: Math.max(1, X(off + q[2]) - X(off + q[0])), height: 14, fill: 'var(--band-ger)', stroke: 'var(--ger)', 'stroke-width': 0.5 }, svg);
+  if (q[1] > 0) el('rect', { x: X(off), y: y - 5, width: Math.max(2, X(off + q[1]) - X(off)), height: 10, rx: 2, fill: 'var(--ger)' }, svg);
+  if (re > 0) el('circle', { cx: X(off + re), cy: y, r: 7, fill: 'var(--panel)', stroke: 'var(--sov)', 'stroke-width': 2.5, opacity: 0.5 }, svg);
 }
-
-// ---------------------------------------------------------------- charts
-const tip = document.getElementById('tip');
-function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(e.clientX + 14, innerWidth - 290); tip.style.left = x + 'px'; tip.style.top = (e.clientY + 14) + 'px'; }
-function hideTip() { tip.style.opacity = 0; }
-const NS = 'http://www.w3.org/2000/svg';
-function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v); if (parent) parent.appendChild(e); return e; }
-function strip(Q, R) {
-  const rows = [
-    ['Soviet casualties, 1941', 'cal1941.sovCas', 'k'], ['Prisoners to 5 Dec.', 'y1941.sov.pris', 'k'], ['Soviet tanks lost, 1941', 'cal1941.sovTl', ''],
-    ['Soviet guns and mortars lost', 'y1941.sov.gl', ''], ['Soviet aircraft lost, 1941', 'cal1941.sovAl', ''], ['German casualties, 1941', 'cal1941.gerCas', 'k'],
-    ['German tanks lost, 1941', 'cal1941.gerTl', ''], ['German aircraft lost, 1941', 'cal1941.gerAl', ''], ['Ground taken by 5 Dec.', 'y1941.areaTot', 'k km²'],
-    ['Winter strike force: men', 'winter.strike.men', 'k'], ['Winter strike force: tanks', 'winter.strike.tanks', ''], ['Winter strike force: aircraft', 'winter.strike.air', ''],
-    ['Ground retaken in the winter', 'winter.regainArea', 'k km²'], ['Soviet field forces, May 1942', 'may1942.sovField', 'k'], ['Soviet tanks at the front, May 1942', 'may1942.sovFrontTanks', ''],
-    ['German men in the east, May 1942', 'may1942.gerMen', 'k'], ['German tanks in the east, May 1942', 'may1942.gerTanks', ''],
-  ];
-  const svg = document.getElementById('strip'); svg.innerHTML = '';
-  const W = 760, lw = 236, rh = 22, top = 22, H = top + rows.length * rh + 8;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const lo = 40, hi = 180, x = v => lw + (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo) * (W - lw - 16);
-  for (const t of [40, 60, 80, 100, 120, 140, 160, 180]) {
-    el('line', { x1: x(t), x2: x(t), y1: top - 4, y2: H - 6, class: t === 100 ? 'axis' : 'grid' }, svg);
-    const tx = el('text', { x: x(t), y: 12, 'text-anchor': 'middle' }, svg); tx.textContent = t;
-  }
-  el('line', { x1: x(100), x2: x(100), y1: top - 4, y2: H - 6, stroke: 'var(--ink)', 'stroke-width': 1.5 }, svg);
-  rows.forEach(([lab, key, unit], i) => {
-    const y = top + i * rh + rh / 2, rv = R[key][1], q = Q[key].map(v => v / rv * 100);
-    const g = el('g', {}, svg);
-    const t = el('text', { x: 0, y: y + 4, class: 'lab' }, g); t.textContent = lab;
-    el('rect', { x: x(q[0]), y: y - 6, width: Math.max(3, x(q[2]) - x(q[0])), height: 12, rx: 3, fill: 'var(--band-ger)', stroke: 'var(--ger)', 'stroke-width': 1 }, g);
-    el('circle', { cx: x(q[1]), cy: y, r: 4.5, fill: 'var(--ger)', stroke: 'var(--panel)', 'stroke-width': 2 }, g);
+document.getElementById('mSlider').addEventListener('input', e => { mIdx = +e.target.value; roads(); });
+document.getElementById('mPlay').onclick = () => { const b = document.getElementById('mPlay'); if (playing) { clearInterval(playing); playing = null; b.textContent = t('Play'); return; } mIdx = 0; b.textContent = t('Stop'); playing = setInterval(() => { mIdx = (mIdx + 1) % M.MONTHS.length; document.getElementById('mSlider').value = mIdx; roads(); if (mIdx === M.MONTHS.length - 1) { clearInterval(playing); playing = null; b.textContent = t('Play'); } }, 700); };
+const pcts = v => v.toFixed(0) + '%';
+const METRICS = [['m41', 'Moscow falls in 1941 (% of runs)', 'moscow.falls1941', o => o.moscow.falls1941 * 100, pcts, true], ['m42', 'Moscow falls in 1942 (% of runs)', 'moscow.falls1942', o => o.moscow.falls1942 * 100, pcts, true],
+  ['len', 'Leningrad capitulates (% of runs)', 'leningrad.falls', o => o.leningrad.falls * 100, pcts, true],
+  ['stal', 'Stalingrad falls (% of runs)', 'stalingrad.falls', o => o.stalingrad.falls * 100, pcts, true], ['ur', 'November counter-offensive breaks through (% of runs)', 'uranus.breakthrough', o => o.uranus.breakthrough * 100, pcts, true],
+  ['r41', 'Casualty ratio, 1941', 'y41.ratio', o => o.y41.ratio, v => dec(v, 2)], ['p41', 'Prisoners, 1941 (k)', 'y41.pris', o => o.y41.pris, k], ['c41', 'Depth on the Moscow axis, Dec. 1941 (km)', 'end41.depth.C', o => o.end41.depth.C, k],
+  ['s42', 'Soviet field forces, Dec. 1942 (k)', 'end42.sMen', o => o.end42.sMen, k], ['cau', 'Caucasus, km beyond Rostov, Dec. 1942', 'caucasus.depth', o => o.caucasus.depth, k]];
+const qv = (q, m) => m[5] ? q[m[2]][3] * 100 : q[m[2]][1];
+const mvSel = document.getElementById('mvMetric');
+function fillMetrics() { const v = mvSel.value || 'm42'; mvSel.innerHTML = ''; for (const m of METRICS) mvSel.insertAdjacentHTML('beforeend', `<option value="${m[0]}">${t(m[1])}</option>`); mvSel.value = v; }
+fillMetrics(); mvSel.onchange = drawMV;
+const PL = { mudOct: 'October mud', mudNov: 'November mud and frost', thaw: 'Spring thaw', reserveE: 'Weight of the Stavka’s allocation', alpha: 'Force ratio and the pace in open country', alphaSet: 'Force ratio in a set-piece attack', railE: 'Railhead rate and the rail lever', lorryE: 'Lorry reach and the supply levers', pocketE: 'Pockets: sealing, posture, leakage', exchD: 'Soviet losses and German power', gExchD: 'German losses and Soviet power', alertPace: 'Alert: slower first two months', alertLeak: 'Alert: leakier pockets', alertAir: 'Alert: aircraft saved on the ground', alertSummer: 'Alert: depth in August and September', railTime: 'Railheads helped by the earlier start', winterD: 'Winter regain and the strength ratio', defX: 'Strength of the Moscow defences', stalX: 'Pressure needed at Stalingrad', uranusX: 'Reserve ratio needed in November', culm: 'Months before the Moscow attack is spent', hub: 'Moscow as the railway hub: reserves moved between theatres', keep: 'An earlier Smolensk brings Typhoon forward', kievDelay: 'Weeks gained without the Kiev diversion', flankCost: 'Strength held back for the open southern flank', tikhvin: 'Ratio needed to retake Tikhvin', siege: 'Months Leningrad holds after Tikhvin', mosRes: 'Moscow defences and the Soviet reserves' };
+const MV = { ver: 0, fixed: null, steps: [], base: null, sens: {}, nSteps: 0 };
+const sameLevers = (a, b) => Object.keys(b).every(kx => kx === 'label' || a[kx] === b[kx]);
+function computeMV() {
+  const ver = ++MV.ver, Lc = Object.assign({}, L), st = document.getElementById('mvStatus'); MV.steps = []; MV.base = null; MV.sens = {};
+  const jobs = [];
+  if (!MV.fixed) { MV.fixed = []; let cum = Object.assign({}, M.LEVERS_REAL); for (const [lab, ch] of M.STEPS) { cum = Object.assign({}, cum, ch); const c = cum; jobs.push(() => MV.fixed.push([lab, M.monteCarlo(c, 200, 1941), c])); } }
+  const SN = M.STEPS.length;
+  jobs.push(() => { MV.steps = MV.fixed.slice(); if (!sameLevers(MV.fixed[SN - 1][2], Lc)) MV.steps.push(['Your slider changes', M.monteCarlo(Lc, 200, 1941), Lc]); MV.nSteps = MV.steps.length; drawMV(); });
+  jobs.push(() => { MV.base = M.monteCarlo(Lc, 80, 7); });
+  for (const [kx, v] of Object.entries(M.PRIORS)) jobs.push(() => { MV.sens[kx] = [M.monteCarlo(Lc, 80, 7, { [kx]: v[0] }), M.monteCarlo(Lc, 80, 7, { [kx]: v[1] })]; });
+  const total = jobs.length; let i = 0;
+  (function step() { if (ver !== MV.ver) return; if (i >= total) { st.textContent = ''; drawMV(); return; } jobs[i++](); st.textContent = tf('Computing… {p}%', { p: Math.round(i / total * 100) }); setTimeout(step, 0); })();
+}
+function drawMV() {
+  const m = METRICS.find(x => x[0] === mvSel.value), f = m[4], sgn = v => { const s = f(Math.abs(v)); return /^0([.,]0+)?%?$/.test(s) ? s : (v >= 0 ? '+' : '−') + s; }, clamp = v => m[5] ? Math.max(0, Math.min(100, v)) : v;
+  const steps = MV.steps; const svg = document.getElementById('mv'); svg.innerHTML = ''; if (!steps.length) return;
+  const vals = steps.map(s => qv(s[1], m)), fin = vals[vals.length - 1], custom = steps[steps.length - 1][0] === 'Your slider changes';
+  let sens = []; const done = Object.keys(MV.sens).length === Object.keys(M.PRIORS).length;
+  if (MV.base) { const b = qv(MV.base, m); sens = Object.entries(MV.sens).map(([kx, [lo, hi]]) => ({ k: kx, lo: qv(lo, m) - b, hi: qv(hi, m) - b })); sens.sort((x, y) => Math.max(Math.abs(y.lo), Math.abs(y.hi)) - Math.max(Math.abs(x.lo), Math.abs(x.hi))); sens = sens.filter(r => f(clamp(fin + Math.min(r.lo, r.hi, 0))) !== f(clamp(fin + Math.max(r.lo, r.hi, 0)))).slice(0, 8); }
+  const W = 760, lw = 300, rw = 90, rh = 24, top = 22, gap = 34; const nS = vals.length + 1, H = top + nS * rh + gap + Math.max(1, sens.length) * rh + 8; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const all = vals.concat(sens.flatMap(r => [clamp(fin + r.lo), clamp(fin + r.hi)])); let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * 0.1 || Math.abs(hi) * 0.05 || 1; lo -= pad; hi += pad; if (m[5]) { lo = Math.max(0, lo); hi = Math.min(100, hi); }
+  const x = v => lw + (v - lo) / (hi - lo) * (W - lw - rw);
+  const raw = (hi - lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(raw))), tick = [1, 2, 2.5, 5, 10].map(s => s * mag).find(s => s >= raw);
+  for (let v = Math.ceil(lo / tick) * tick; v <= hi + 1e-9; v += tick) { el('line', { x1: x(v), x2: x(v), y1: top - 4, y2: H - 4, class: 'grid' }, svg); const tx = el('text', { x: x(v), y: 12, 'text-anchor': 'middle' }, svg); tx.textContent = f(v); }
+  const row = (i, lab, bold) => { const y = top + i * rh + rh / 2, g = el('g', {}, svg); const tx = el('text', { x: 0, y: y + 4, class: 'lab' }, g); tx.textContent = lab; if (bold) tx.style.fontWeight = 800; return [y, g]; };
+  const right = (g, y, txt, bold) => { const tx = el('text', { x: W - rw + 10, y: y + 4 }, g); tx.textContent = txt; if (bold) { tx.style.fill = 'var(--ink)'; tx.style.fontWeight = 700; } };
+  vals.forEach((v, i) => {
+    const [y, g] = row(i, i === 0 ? t('Reality') : t(steps[i][0]), i === 0);
+    if (i > 0) { const pv = vals[i - 1]; el('line', { x1: x(pv), x2: x(pv), y1: y - rh / 2 - 6, y2: y + 6, stroke: 'var(--muted)', 'stroke-width': 1, 'stroke-dasharray': '2 2' }, g); el('rect', { x: Math.min(x(pv), x(v)), y: y - 6, width: Math.max(2, Math.abs(x(v) - x(pv))), height: 12, rx: 2, fill: v >= pv ? 'var(--accent)' : 'var(--sov)', opacity: Math.abs(x(v) - x(pv)) < 2 ? 0.3 : 0.8 }, g); }
+    else el('circle', { cx: x(v), cy: y, r: 5, fill: 'var(--ink)' }, g);
+    right(g, y, i === 0 ? f(v) : sgn(v - vals[i - 1]), i === 0);
     el('rect', { x: 0, y: y - rh / 2, width: W, height: rh, fill: 'transparent' }, g);
-    const f = v => (unit === 'k' && v >= 1000 ? (v / 1000).toFixed(2) + 'm' : nf.format(Math.round(v)) + (unit && unit !== 'k' ? ' ' + unit : unit === 'k' ? 'k' : ''));
-    g.addEventListener('mousemove', e => showTip(e, `<b>${lab}</b><br>Reality ${f(rv)}<br>Model ${f(Q[key][1])} (${f(Q[key][0])}–${f(Q[key][2])})<br>${q[1].toFixed(0)}% of reality`));
-    g.addEventListener('mouseleave', hideTip);
+    g.addEventListener('mousemove', e => showTip(e, `<b>${i === 0 ? t('Reality') : t(steps[i][0])}</b><br>${t(m[1])}: ${f(v)}${i ? `<br>${tf('change from the step before: {d}', { d: sgn(v - vals[i - 1]) })}` : ''}`)); g.addEventListener('mouseleave', hideTip);
   });
+  { const [y, g] = row(nS - 1, t(custom ? 'Your settings' : 'The scenario'), true); el('line', { x1: x(fin), x2: x(fin), y1: y - rh / 2 - 6, y2: y, stroke: 'var(--muted)', 'stroke-width': 1, 'stroke-dasharray': '2 2' }, g); el('circle', { cx: x(fin), cy: y, r: 5, fill: 'var(--ink)' }, g); right(g, y, f(fin), true); }
+  const ys = top + nS * rh + gap / 2; el('line', { x1: 0, x2: W, y1: ys - 8, y2: ys - 8, class: 'axis' }, svg);
+  const th = el('text', { x: 0, y: ys + 8, class: 'lab' }, svg); th.textContent = done ? tf('How sure the model is: what each uncertain mechanism could shift {x} by', { x: t(custom ? 'your settings' : 'the scenario') }) : t(MV.base ? 'How sure the model is (computing…)' : 'How sure the model is: computing…'); th.style.fill = 'var(--muted)';
+  if (!sens.length && done) { const tx = el('text', { x: lw, y: top + nS * rh + gap + rh / 2 + 4 }, svg); tx.textContent = t('none of the uncertain mechanisms moves this result'); }
+  if (sens.length) el('line', { x1: x(fin), x2: x(fin), y1: top + nS * rh + gap - 4, y2: H - 4, stroke: 'var(--ink)', 'stroke-width': 1.5 }, svg);
+  sens.forEach((r, i) => { const [y, g] = row(nS + gap / rh + i, t(PL[r.k] || r.k)); const a = clamp(fin + Math.min(r.lo, r.hi, 0)), b = clamp(fin + Math.max(r.lo, r.hi, 0));
+    el('rect', { x: x(a), y: y - 6, width: Math.max(2, x(b) - x(a)), height: 12, rx: 2, fill: 'var(--muted)', opacity: 0.45 }, g);
+    right(g, y, `${f(a)}–${f(b)}`); el('rect', { x: 0, y: y - rh / 2, width: W, height: rh, fill: 'transparent' }, g);
+    g.addEventListener('mousemove', e => showTip(e, `<b>${t(PL[r.k] || r.k)}</b><br>${tf('at the low end of its range: {v}', { v: f(clamp(fin + r.lo)) })}<br>${tf('at the high end: {v}', { v: f(clamp(fin + r.hi)) })}<br>${tf('middle: {v}', { v: f(fin) })}`)); g.addEventListener('mouseleave', hideTip); });
 }
-function lineChart(id, series) {
-  const svg = document.getElementById(id); svg.innerHTML = '';
-  const W = 420, H = 230, l = 52, rgt = 70, t = 14, b = 30;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  const xs = [0, 1, 2], XL = ['June 1941', 'Dec. 1941', 'May 1942'];
-  const allv = series.flatMap(s => [...s.real, ...s.q.flat()]);
-  const vmax = Math.max(...allv) * 1.08;
-  const step = vmax > 8000 ? 4000 : vmax > 4000 ? 1000 : 500;
-  const top = Math.ceil(vmax / step) * step;
-  const X = i => l + i * (W - l - rgt) / 2, Y = v => t + (1 - v / top) * (H - t - b);
-  for (let v = 0; v <= top; v += step) { el('line', { x1: l, x2: W - rgt, y1: Y(v), y2: Y(v), class: v === 0 ? 'axis' : 'grid' }, svg); const tx = el('text', { x: l - 6, y: Y(v) + 4, 'text-anchor': 'end' }, svg); tx.textContent = nf.format(v); }
-  xs.forEach(i => { const tx = el('text', { x: X(i), y: H - 10, 'text-anchor': 'middle' }, svg); tx.textContent = XL[i]; });
-  for (const s of series) {
-    const band = xs.map(i => `${X(i)},${Y(s.q[i][2])}`).concat(xs.slice().reverse().map(i => `${X(i)},${Y(s.q[i][0])}`)).join(' ');
-    el('polygon', { points: band, fill: s.band, stroke: 'none' }, svg);
-    el('polyline', { points: xs.map(i => `${X(i)},${Y(s.real[i])}`).join(' '), fill: 'none', stroke: s.col, 'stroke-width': 2, 'stroke-dasharray': '5 4' }, svg);
-    el('polyline', { points: xs.map(i => `${X(i)},${Y(s.q[i][1])}`).join(' '), fill: 'none', stroke: s.col, 'stroke-width': 2 }, svg);
-    xs.forEach(i => {
-      el('circle', { cx: X(i), cy: Y(s.q[i][1]), r: 4, fill: s.col, stroke: 'var(--panel)', 'stroke-width': 2 }, svg);
-      const hit = el('circle', { cx: X(i), cy: Y(s.q[i][1]), r: 12, fill: 'transparent' }, svg);
-      hit.addEventListener('mousemove', e => showTip(e, `<b>${s.name}, ${XL[i]}</b><br>Model ${nf.format(Math.round(s.q[i][1]))} (${nf.format(Math.round(s.q[i][0]))}–${nf.format(Math.round(s.q[i][2]))})<br>Reality ${nf.format(Math.round(s.real[i]))}`));
-      hit.addEventListener('mouseleave', hideTip);
-    });
-  }
-  // end labels, pushed apart when they would collide
-  const ends = series.map(s => ({ s, y: Y(s.q[2][1]) + 4 })).sort((a, b) => a.y - b.y);
-  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 14) ends[i].y = ends[i - 1].y + 14;
-  for (const e of ends) { const lab = el('text', { x: X(2) + 8, y: e.y, class: 'lab' }, svg); lab.textContent = e.s.name; }
+// ---------------------------------------------------------------- language switch
+function applyLang() {
+  document.documentElement.setAttribute('lang', lang); document.title = lang === 'ru' ? RU.title : 'Eastern Front Model 1941–42';
+  for (const e of document.querySelectorAll('[data-t]')) { const key = e.getAttribute('data-t'); e.innerHTML = lang === 'ru' && RU[key] ? RU[key] : EN[key]; }
+  document.getElementById('lEn').classList.toggle('on', lang === 'en'); document.getElementById('lRu').classList.toggle('on', lang === 'ru');
+  document.getElementById('mPlay').textContent = t(playing ? 'Stop' : 'Play');
+  buildLevers(); syncLevers(); fillMetrics();
 }
-syncLevers(); setPreset('scen'); render();
+function setLang(l) { if (l === lang) return; lang = l; try { localStorage.setItem('efm-lang', l); } catch (e) { } applyLang(); draw(); drawMV(); }
+document.getElementById('lEn').onclick = () => setLang('en'); document.getElementById('lRu').onclick = () => setLang('ru');
+applyLang(); setPreset('scen'); render();
 })();
+
 </script>
 
 </body>

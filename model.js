@@ -1,415 +1,289 @@
-// Halifax scenario: campaign model, June 1941 to spring 1942.
-// Method: the real campaign is the baseline. Each phase and sector carries its real losses, depth and duration.
-// The scenario changes only what the premise changes (start date, Soviet alert and strength, German strength, the
-// Luftwaffe, production, Lend-Lease, the Far East). Each change acts through a stated mechanism whose strength
-// (an elasticity) is uncertain and drawn from a range; with every lever at its real value the model returns reality.
-// Men in thousands; equipment in units; distances in km; areas in thousand km2.
+// Eastern Front, June 1941 to December 1942: a monthly model for the Halifax scenario.
+// Each month the model carries forward a few state variables (men, tanks and aircraft on each side; the German railheads and
+// supply reach on each axis; the Soviet production base) and moves the front on three axes by a handful of mechanisms:
+// pace from the force ratio, a supply reach that caps it, season, pockets, attrition, production and mobilization.
+// Decisions are levers (where the Germans attack and when, how the Soviets stand). The constants are calibrated so that the
+// real settings reproduce the real monthly front and the real losses of 1941 and 1942; the uncertain mechanisms are
+// multipliers around that calibration, drawn from ranges in a Monte Carlo. Men in thousands; equipment in units; km.
 (function (root) {
 'use strict';
 
-// ------------------------------------------------------------------ real baseline
-// Soviet losses: Krivosheev (operations, quarters, 1941 totals). "mc" = missing and captured; Krivosheev's 1941 deaths
-// (802k) run at about 0.6 of his sick and wounded, so deaths = 0.6 x san and mc = irr - deaths.
-// pris = prisoners by the German count (claims). Equipment lost: Krivosheev by operation (some autumn/N figures estimated).
-// Committed strengths: Krivosheev/Glantz (men), tank and aircraft holdings incl. reinforcements (approximate).
-// German casualties: Halder (to 3 Jul 54.6k, 13 Aug 389.9k, 30 Sep 551.0k, 31 Dec 830.9k); tanks ~2,600 in the east
-// in 1941; aircraft: Bekker by period. Depths along the main axis; areas from territory.py (real high-water 1941).
-const REAL = {
-  start: '1941-06-22', halt: '1941-12-05',
-  sectors: ['N', 'C', 'S'],
-  phase: {
-    frontier: {
-      N: { irr: 75.2, san: 13.3, pris: 35, tl: 2523, gl: 3561, al: 990, men: 440, tanks: 2700, air: 1200, days: 18, depth: 450 },
-      C: { irr: 341.1, san: 76.7, pris: 324, tl: 4799, gl: 9427, al: 1777, men: 670, tanks: 6000, air: 2100, days: 18, depth: 450 },
-      S: { irr: 172.3, san: 69.3, pris: 50, tl: 4381, gl: 5806, al: 1218, men: 865, tanks: 5800, air: 1900, days: 15, depth: 300 },
-      ger: { cas: 80, tl: 390, al: 600 },
-    },
-    summer: {
-      N: { irr: 214.1, san: 130.8, pris: 80, tl: 1492, gl: 9885, al: 1702, men: 517, tanks: 1800, air: 1500, days: 83, depth: 250 },   // Leningrad SDO, 10 Jul-30 Sep (incl. the September assault)
-      C: { irr: 486.2, san: 273.8, pris: 450, tl: 1348, gl: 9290, al: 903, men: 900, tanks: 1700, air: 1000, days: 63, depth: 250 },
-      S: { irr: 616.3, san: 84.2, pris: 770, tl: 411, gl: 28419, al: 343, men: 900, tanks: 700, air: 600, days: 82, depth: 400 },
-      ger: { cas: 471, tl: 1170, al: 1000 },
-    },
-    autumn: {
-      N: { irr: 22.7, san: 17.8, pris: 20, tl: 200, gl: 1000, al: 200, men: 136, tanks: 300, air: 300, days: 33, depth: 150 },   // Tikhvin SDO 16 Oct-18 Nov; equipment, prisoners, tanks, air estimated
-      C: { irr: 514.3, san: 143.9, pris: 663, tl: 2785, gl: 3832, al: 293, men: 1250, tanks: 3000, air: 936, days: 65, depth: 300 },   // Moscow SDO 30 Sep-5 Dec
-      S: { irr: 267.4, san: 56.9, pris: 250, tl: 400, gl: 8000, al: 500, men: 800, tanks: 400, air: 600, days: 52, depth: 300 },   // composite: Donbass-Rostov + Sumy-Kharkov + Crimea; equipment, prisoners estimated
-      ger: { cas: 207, tl: 780, al: 489 },
-    },
-  },
-  pauseAfterSummer: { N: 16, C: 20, S: 3 },
-  // the rest of 22 Jun-5 Dec: other theatres, positional fighting, losses outside the operations counted above
-  // (closing totals: Krivosheev's 1941 figures less the operations above and December; prisoners: German claims less those above)
-  background: { irr: 278, san: 169, pris: 690, tl: 1560, gl: 20400, al: 9470 },
-  // background aircraft: frontier losses on the ground outside the three operations (Soviet counts ~6,860 lost by 12 Jul against
-  // 3,985 in the operations), combat losses elsewhere, and non-combat losses (estimated split)
-  bgAir: { frontierGround: 2800, combat: 2700, nonCombat: 3970 },
-  gerKmShare: 0.253,                 // Halder: killed and missing as a share of casualties (1941)
-  dec: { sovIrr: 150, sovSan: 300, gerCas: 73, tl: 600, gl: 1500, al: 500 },   // 5-31 Dec (part of the winter)
-  areaHigh: { N: 244, C: 522, S: 598 },       // thousand km2 taken at the 1941 high-water (territory.py)
-  areaEnd41: 1287, areaApr42: 1212,           // real 31 Dec 1941; real ~1 May 1942
-  winterRegainArea: { N: 42, C: 85, S: 24 },  // high-water to ~1 May 1942
-  // autumn progress per day: dry, mud (10 Oct-15 Nov) and frost, relative to a dry day
-  mud: { from: '1941-10-10', to: '1941-11-15', mudRate: 0.2, frostRate: 0.45 },
-  autumnStart: { C: '1941-10-01', S: '1941-09-30' }, autumnHalt: { C: '1941-12-05', S: '1941-11-21' },   // the model's real clock
-  // milestones: [sector, days into frontier phase, days into summer phase] (real)
-  milestones: {
-    Minsk: ['C', 6, 0], Smolensk: ['C', 18, 6], Kiev: ['S', 15, 74], Shlisselburg: ['N', 18, 60],
-  },
-  // stocks
-  sov: { tanks0: 22600, tanksDec: 7540, tanksJan: 7700, air0: 20000, airDec: 11150, fieldDec: 4250, fieldMay: 5100,
-         field: { frontier: 2900, summer: 3300, autumn: 3200 }, frontTanks: { summer: 4200, autumn: 3700 }, frontAir: { summer: 3100, autumn: 1836 },
-         frontTanksDec: 1950, frontAirDec: 2400,   // field strengths, front holdings and the stocks below are approximate
-         llTanksDec: 350, llAirDec: 600, llTanksMay: 1500, llAirMay: 1300,
-         prodTanksDecApr: 6450, prodAirDecApr: 7100, tanksMay: 11840, frontTanksMay: 5500, frontAirMay: 3200 },
-  // German shortfall and replacements (approximate; Halder: 323k replacements by 31 Aug; 1.1m by spring 1942); a share of the
-  // shortfall is sickness and frost, which scales with men in the line and time, the rest with battle casualties
-  ger: { men0: 3300, tanks0: 3600, shortfallDec: 400, replDec: 500, shortfallMay: 625, replMay: 1100, sickShare: 0.35,
-         tankArrivalsDec: 900, tankArrivalsDecApr: 1400, tanksMay: 2800, lwMay: 2600 },   // tank arrivals, May stocks: estimated
-  decShare: { gerTl: 0.34, sovAl: 0.17, gerAl: 0.15 },   // December's share of the winter's equipment losses (estimated)
-  llTanksDecJan: 116, llFrontShare: 0.6,                  // British tanks arriving 5-31 Dec; share of Lend-Lease tanks at the front
-  // winter, 5 Dec 1941-31 Mar 1942 (Krivosheev Q1 1942 plus December; Halder)
-  winter: { sovCas: 2300, sovIrr: 825, gerCas: 350, gerKm: 105, pris: 150, sovTl: 3300, gerTl: 760, sovAl: 3000, gerAl: 859,
-            strike: { men: 1100, tanks: 774, air: 1000 }, agc: { men: 1708, tanks: 1170, air: 615 },
-            shoulderStart: { N: 77, S: 114 }, shoulderRegain: { N: 182, S: 197 } },   // km from Noginsk: Yakhroma 77 to Rzhev 259; Kashira 114 to Bolkhov 311
-  // Typhoon (Oct 1941) as the analogue for a German offensive on Moscow
-  typhoon: { gMen: 1929, gTanks: 1700, gAir: 1390, sMen: 1250, sTanks: 1000, sAir: 936, captureFrac: 0.53, closeDays: 7 },
+const MONTHS = ['1941-06', '1941-07', '1941-08', '1941-09', '1941-10', '1941-11', '1941-12', '1942-01', '1942-02', '1942-03',
+  '1942-04', '1942-05', '1942-06', '1942-07', '1942-08', '1942-09', '1942-10', '1942-11', '1942-12'];
+const AXES = ['N', 'C', 'S'];
+const MILES = {   // km from the frontier of June 1941 along each axis (the model's own scale)
+  N: [['Daugavpils', 300], ['Pskov', 520], ['Luga', 720], ['Shlisselburg', 850], ['Tikhvin', 950]],
+  C: [['Minsk', 330], ['Smolensk', 640], ['Vyazma', 870], ['Moscow', 1080]],
+  S: [['Kiev', 450], ['Kharkov', 750], ['Rostov', 1000], ['Voronezh', 1150], ['Stalingrad', 1500], ['Astrakhan', 1750]],
 };
+const CAUC = [['Maikop', 300], ['Mozdok', 540], ['Grozny', 650], ['Baku', 1000]];   // the Caucasus branch, km beyond Rostov
 
-// ------------------------------------------------------------------ levers (what the premise changes)
+// ------------------------------------------------------------------ calibrated constants (the real war)
+const K = {
+  paceK: { N: 1170, C: 1348, S: 424 },    // km a month the spearheads make in open season at even force with supply to spare
+  railRate: 240, lorryRange: 310, overrun: 120,
+  // German advance season: weather and the exhaustion that came with it (1 = summer)
+  season: { '1941-10': 0.537, '1941-11': 0.127, '1941-12': 0.03, '1942-01': 0.03, '1942-02': 0.03, '1942-03': 0.03, '1942-04': 0.1, '1942-05': 0.60,
+            '1942-10': 0.10, '1942-11': 0.2, '1942-12': 0.05 },
+  pockets: 0.495,                          // prisoners (k) per thousand Soviet men, per 400 km of weighted advance, standing forward
+  gCas: 142.6, sCas: 284.3,                   // casualties a month (k) per unit of the enemy's combat power at full intensity
+  winterRegain: 15.0,                       // km a month the Soviet winter offensive regains on the Moscow axis at even strength
+  sTank: { 1941: 0.226, 1942: 0.102 }, gTank: 0.148, sAir: { 1941: 0.200, 1942: 0.297 }, gAir: 0.124,
+  stalX: 1.0, uranusX: 0.85,             // Stalingrad falls at 1.15 x the real pressure; Uranus breaks through at 0.85 x the real reserve ratio
+  // share of pre-war production capacity lost with the territory in reality, by month (evacuation recovers part of it)
+  lostReal: [0.05, 0.3, 0.42, 0.5, 0.55, 0.58, 0.6, 0.6, 0.6, 0.6, 0.58, 0.56, 0.55, 0.6, 0.65, 0.66, 0.66, 0.66, 0.64],
+  lostW: 0.5,
+  sEarly: 0.612, nLuga: 0.900,              // the south's slow start; the Luga Line in July and August
+  seasonS: { '1941-10': 0.334, '1941-11': 0.662 },   // the south's mud came later and lighter
+  capN: 950,                              // Leningrad is invested, not stormed: the northern axis ends at Tikhvin
+  sCas42X: 2.600, gCas42X: 0.632,            // 1942: the Red Army attacked for much of the year, at its own cost
+  caucShare: 0.75,                        // share of the southern supply reach that the Caucasus branch can use
+  mosDef41: { '1941-08': 0.25, '1941-09': 0.250, '1941-10': 0.119, '1941-11': 0.566 },   // Aug-Sep: the Reserve Front on the Rzhev-Vyazma line and Timoshenko's counter-attacks (not calibrated: the real Centre did not attack then)   // the Moscow defence zone and the reserve armies forming before the capital, by calendar month
+  offFront: 0.26, mozhaisk: 930, offFront41: 0.22,   // the Mozhaisk line, km; the pace beyond it relative to open country                         // a set-piece offensive against a continuous front moves at this share of the open pace
+  railLag42: 0.881, railRate42X: 1.003,       // the railways of 1942: the Dnieper bridges rebuilt and the Donbas network in use
+  lorryMud: 0.312,                          // lorry reach in mud and snow, relative to summer
+  railLag: 0.800,                          // the railheads follow at most this share of the front's depth in the first year                             // production falls by this share of the difference from the real territorial loss
+};
+const PROD = { sTanks41: 1100, sTanks42: 2050, sAir41: 1300, sAir42: 2100, sMen41: 850, sMen42: 415,
+               gTanksE41: 160, gTanksE42: 300, gAir41: 350, gAir42: 450, gRepl41: 80, gRepl42: 95 };
+const START = { gMen: 3300, gTanks: 3600, gAir: 2800, sMen: 2900, sTanks: 22600, sAir: 20000 };
+
+// ------------------------------------------------------------------ levers
 const LEVERS_REAL = {
-  label: 'Reality', start: '1941-06-22', sovWest: 2900, readiness: 0, fighting: 0, gerMen: 3300, gerTanks: 3600, lw41: 1.0, lw42: 1.0,
-  lendLease: true, farEastHeld: 0, gerProd41: 1.0, gerProd42: 1.0, gerEastShare: 1.0, replF: 1.0, lfl2Stays: false,
-  sovProd42: 1.0, supplyBonus: 0, sovMobExtra: 0,
+  label: 'Reality', start: '1941-06-22', gMen: 3300, gTanks: 3600, gAirX: 1.0, lorries: 1.0, fuel: 1.0, railX: 1.0,
+  sMen: 2900, alert: 0, lendLease: true, farEastHeld: 0, gProdX: 1.0, gReplX: 1.0, sProdX: 1.0,
+  kievDiversion: true, moscowKm: 1080, moscow42: false, moscowDef: 0.65, blueStart: '1942-07', supplyLimit: true,
+  stavka41: 'south', stavka42: 'moscow',     // where the Stavka keeps its weight: 1941 the Kiev group of fronts (as in reality), 1942 before Moscow (as in reality)
+  sovDepth: false, kievWithdraw: false, winterLimited: false, noKharkov: false,
 };
-const LEVERS_SCEN = {
-  label: 'Scenario', start: '1941-06-01', sovWest: 3700, readiness: 1, fighting: 0, gerMen: 3900, gerTanks: 3800, lw41: 1.5, lw42: 1.7,
-  lendLease: false, farEastHeld: 0.5, gerProd41: 1.2, gerProd42: 1.4, gerEastShare: 1.15, replF: 1.25, lfl2Stays: true,
-  sovProd42: 0.96, supplyBonus: 0.03, sovMobExtra: 0,
-};
+const LEVERS_SCEN = Object.assign({}, LEVERS_REAL, {
+  label: 'Scenario', start: '1941-06-01', gMen: 3900, gTanks: 3800, gAirX: 1.5, lorries: 1.1, fuel: 1.05, railX: 1.0,   // net of what the extra divisions and aircraft consume
+  sMen: 3700, alert: 1, lendLease: false, farEastHeld: 0.5, gProdX: 1.3, gReplX: 1.25, sProdX: 0.96,
+  kievDiversion: true, moscow42: true, moscowDef: 0.65, blueStart: 'after Moscow',
+});
 
-// ------------------------------------------------------------------ uncertain mechanisms: [low, high]
+// ------------------------------------------------------------------ uncertain mechanisms, [low, high]: multipliers around the calibration
+// each acts only on departures from the real war, so the real settings always return the calibrated real run
 const PRIORS = {
-  alpha: [0.3, 0.7],          // advance rate ~ (force ratio)^alpha
-  beta: [0.3, 0.8],           // share of a pocket captured ~ (German sealing power / Soviet men)^beta
-  zeta: [0.0, 0.5],           // a slower advance lets more men escape: prisoners ~ speed^zeta
-  kappa: [0.5, 1.0],          // Soviet killed and wounded ~ (Soviet strength)^kappa
-  mu: [0.3, 0.7],             // ... ~ (German combat power)^mu
-  theta: [0.5, 1.0],          // ... ~ (duration)^theta
-  phi: [0.2, 0.4],            // share of the men who escape a pocket who become casualties breaking out
-  lambda: [0.05, 0.2],        // German losses fall with air support: ~ LW^-lambda
-  nu: [0.3, 0.7],             // German losses rise with German men engaged: ~ (German men)^nu
-  exposure: [0.4, 0.8],       // share of the extra Soviet men standing in the frontier battle zone
-  carrySummer: [0.2, 0.5],    // the extra men still extra by July (the rest would have been mobilized anyway)
-  carryAutumn: [0.0, 0.2],
-  // the alert: readiness effects by phase (frontier, summer, autumn); by the autumn the real Red Army was mobilized too
-  resist: [[0.6, 0.85], [0.85, 1.0], [1, 1]],         // advance speed multiplier
-  leak: [[1.15, 1.6], [1.0, 1.25], [1, 1]],           // pockets leak: prisoners divided by this
-  exch: [[1.15, 1.5], [1.0, 1.15], [1, 1]],           // German casualties per unit of Soviet fighting
-  tankAdj: [[0.9, 1.1], [0.9, 1.05], [0.9, 1.05]],    // Soviet tank losses per tank engaged
-  groundAir: [0.3, 0.6],      // frontier: Soviet aircraft lost on the ground, relative to reality
-  airWar: [1.1, 1.4],         // frontier: a fortnight's air battle instead of a few days
-  gunPocket: [0.5, 0.8],      // share of Soviet gun losses that come with pockets (rest with fighting)
-  gamma: [0.4, 0.8],          // Soviet combat air losses ~ LW^gamma
-  delta: [0.3, 0.7],          // German tank losses ~ (Soviet tanks engaged)^delta
-  supplyDraw: [-0.03, 0.05],  // uncertainty in how far German supply reaches, added to the lever (floor 0)
-  // winter and spring
-  lfl2: [1.1, 1.3],           // Luftflotte 2 kept on the Moscow front in December, on top of the 1941 multiplier
-  kappaW: [0.8, 1.5],         // winter ground regained ~ (Soviet strike / German defence)^kappaW
-  feTransfer: [200, 300],     // men (k) the Far East sent west by December in reality
-  feTanks: [150, 300],        // tanks from the Far East at the front in December in reality
-  sigma: [0.35, 0.5],         // spring 1942: Soviet share of field forces on the Moscow axis
-  phiG: [0.45, 0.6],          // German share of eastern men in the Moscow offensive
-  phiT: [0.5, 0.65],          // ... of tanks
-  phiA: [0.5, 0.65],          // ... of aircraft
-  rate0: [20, 30],            // km/day of the panzer spearheads in a Typhoon-like breakthrough
-  prepared: [0.35, 0.6],      // prepared defences of the Moscow zone slow the spearheads
-  friction: [1.0, 1.3],
-  dMax: [35, 60],             // days before the Moscow offensive culminates; a ring not closed by then is not closed
-  depthOutside: [0.3, 0.6],   // share of the Moscow-axis forces inside the ring, relative to Vyazma
-  reduceDays: [10, 20],       // days to reduce the pocket
-  enterDays: [14, 30],        // days from closing the ring to entering Moscow
-  redeployDays: [10, 25],     // days to move panzer and air units south for Blue
+  mudOct: [0.7, 1.3], mudNov: [0.7, 1.3], thaw: [0.7, 1.3],   // weather: how much of October and November 1941 and of the 1942 spring was lost to mud (1 = as it was)
+  reserveE: [0.5, 1.0],       // how much a shift of Soviet weight between axes tells on the pace and on a set-piece attack there
+  alpha: [0.1, 0.5],
+  alphaSet: [0.5, 0.9],       // ... and in a set-piece attack on a held front (Moscow beyond the Mozhaisk line; the 1942 attack), around 0.7        // pace ~ (force ratio)^alpha, around the calibrated 0.3: in open country the spearheads move as supply allows
+  mosRes: [0.6, 1.4],         // the Soviet reserve armies before Moscow respond to Soviet strength more or less than calibrated
+  railE: [0.7, 1.3],          // railhead rate ~ (rail lever)^railE
+  lorryE: [0.7, 1.3],         // lorry reach ~ (lorries and fuel against consumption)^lorryE
+  pocketE: [0.5, 1.5],        // pockets ~ (German sealing, Soviet posture, the alert's leakage)^pocketE
+  exchD: [-0.4, 0.4],         // Soviet losses respond to German power more or less than calibrated
+  gExchD: [-0.4, 0.4],        // German losses respond to Soviet power more or less than calibrated
+  alertPace: [0.6, 0.85], alertLeak: [1.15, 1.6], alertAir: [0.4, 0.7], alertSummer: [0.8, 1.0],
+  railTime: [0.3, 0.7],       // share of the earlier start's extra weeks that the railhead conversion can use   // the alert: the first two months, and the depth behind them in August and September
+  winterD: [-0.5, 0.6],       // winter regain responds to the strength ratio more or less than calibrated
+  defX: [0.8, 1.2],         // strength of the Moscow defences, relative to the slider
+  stalX: [0.85, 1.35],        // pressure needed at Stalingrad, relative to the real; below 1 the city would have fallen even in reality          // pressure needed at Stalingrad, relative to the real (which did not suffice)
+  uranusX: [0.75, 1.3],      // reserve ratio needed for the November counter-offensive, relative to the real (which sufficed)
+  culm: [1.0, 2.0],
+  hub: [0.5, 0.8],            // Moscow as the railway hub: the share of the Stavka's capacity to move reserves between theatres that survives its fall (eleven trunk lines met there; the Volga bypass lines were fewer and slower); half the loss made good over a year
+  tikhvin: [0.8, 1.0],        // Soviet strength ratio, relative to the real, needed to retake Tikhvin in December
+  siege: [3, 5],              // months without the Ladoga route before Leningrad capitulates
+  keep: [0.4, 1.0],           // share of an earlier Smolensk that an earlier Typhoon keeps (the Centre's recovery takes the rest)
+  kievDelay: [2, 4],          // weeks the Kiev diversion delays Typhoon (the Centre needed the rest of the time to recover anyway)
+  flankCost: [0.15, 0.35],    // without Kiev: share of the Centre's strength held back to cover the uncovered southern flank           // months of effort before an offensive on Moscow is spent
 };
-
 const mid = r => (r[0] + r[1]) / 2;
-const draw = (r, u) => r[0] + (r[1] - r[0]) * u;
-function sampleParams(rng) {
-  const p = {};
-  for (const [k, v] of Object.entries(PRIORS)) {
-    if (Array.isArray(v[0])) p[k] = v.map(r => (rng ? draw(r, rng()) : mid(r)));
-    else p[k] = rng ? draw(v, rng()) : mid(v);
-  }
-  return p;
-}
+function sampleParams(rng) { const p = {}; for (const [k, v] of Object.entries(PRIORS)) p[k] = rng ? v[0] + (v[1] - v[0]) * rng() : mid(v); return p; }
 
 // ------------------------------------------------------------------ helpers
-const day = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5;
-const iso = d => new Date(d * 864e5).toISOString().slice(0, 10);
-const PH = ['frontier', 'summer', 'autumn'];
 const comp = (men, tanks, air, w) => Math.pow(men, w[0]) * Math.pow(tanks, w[1]) * Math.pow(air, w[2]);
-const GW = [0.5, 0.25, 0.25], SW = [0.6, 0.2, 0.2];   // weights of men, tanks, aircraft in German and Soviet combat power
-
-// progress of an autumn offensive from t0 to t1 at "rate" km per dry day, with mud and frost
-function autumnDepth(t0, t1, rate) {
-  const m0 = day(REAL.mud.from), m1 = day(REAL.mud.to);
-  let d = 0;
-  for (let t = t0; t < t1; t++) d += rate * (t < m0 ? 1 : t < m1 ? REAL.mud.mudRate : REAL.mud.frostRate);
-  return d;
-}
-const sumPh = f => PH.reduce((a, ph) => a + f(REAL.phase[ph]), 0);
+const GWT = [0.5, 0.25, 0.25], SWT = [0.6, 0.2, 0.2];
+const monthDays = m => new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate();
+const dateIn = (m, frac) => `${m}-${String(Math.max(1, Math.min(monthDays(m), Math.round(frac * monthDays(m))))).padStart(2, '0')}`;
+let REF = null;   // the real run's monthly trajectory and end-state references, set once by setRef()
+const dev = (v, ref, e) => (REF && ref > 0) ? Math.pow(v / ref, e) : 1;
 
 // ------------------------------------------------------------------ the model
 function run(L, p) {
-  const R = REAL, o = { levers: L.label };
-  const t0 = day(L.start), tr0 = day(R.start);
-  const A = (arr, i) => 1 + L.readiness * (arr[i] - 1);         // the alert's readiness effects, scaled by the lever (0 = none)
-  const AX = (arr, i) => 1 + L.fighting * (arr[i] - 1);         // the alert's effect on German losses per Soviet soldier fighting
-  const LW = L.lw41;
-  const gerCasHaltR = sumPh(P => P.ger.cas), gerTlHaltR = sumPh(P => P.ger.tl);
-  const tfHalt = (day(R.halt) - t0) / (day(R.halt) - tr0);      // length of the campaign relative to reality
-  const gerMen0 = L.gerMen / R.ger.men0;
-  // German net loss: battle part follows casualties, sick part follows men in the line and time
-  const gerNet = (realNet, casRatio, tRatio) => realNet * ((1 - R.ger.sickShare) * casRatio + R.ger.sickShare * gerMen0 * tRatio);
-  const supply = Math.max(0, L.supplyBonus + p.supplyDraw);
-  // ---- 1941 phases
-  let sovMenRatio, sovTankRatio = 1, sovAirRatio = 1, gerMenRatio = gerMen0, gerTankRatio = L.gerTanks / R.ger.tanks0;
-  const extra0 = L.sovWest - 2900;
-  let saved = 0, tankSaved = 0, airSaved = 0;                      // cumulative Soviet men/tanks/aircraft saved vs reality
-  let gerCasCumR = 0, gerCasCumS = 0, gerTlR = 0, gerTlS = 0;
-  const out = { sov: { irr: 0, san: 0, mc: 0, pris: 0, tl: 0, gl: 0, al: 0 }, ger: { cas: 0, km: 0, tl: 0, al: 0 } };
-  const phaseOut = {}, capacity = {};
-  const T = { N: t0, C: t0, S: t0 };                               // scenario clock per sector
-  const depth = { N: 0, C: 0, S: 0 };
-  const ms = {};                                                    // milestone dates
-  const realDepthTotal = s => sumPh(P => P[s].depth);
-  for (let i = 0; i < 3; i++) {
-    const ph = PH[i], P = R.phase[ph];
-    if (ph === 'frontier') sovMenRatio = 1 + p.exposure * extra0 / 2900;
-    else {
-      const carry = ph === 'summer' ? p.carrySummer : p.carryAutumn;
-      sovMenRatio = (R.sov.field[ph] + extra0 * carry + saved + (ph === 'autumn' ? L.sovMobExtra : 0)) / R.sov.field[ph];
-      sovTankRatio = Math.max(0.2, 1 + tankSaved / R.sov.frontTanks[ph]);
-      sovAirRatio = Math.max(0.2, 1 + airSaved / R.sov.frontAir[ph]);
-    }
-    const G = comp(gerMenRatio, gerTankRatio, LW, GW), S = comp(sovMenRatio, sovTankRatio, sovAirRatio, SW);
-    const FR = G / S;
-    const speed = Math.pow(FR, p.alpha) * A(p.resist, i);
-    const seal = gerMenRatio * Math.pow(LW, 0.3);
-    const multP0 = Math.pow(sovMenRatio, 1 - p.beta) * Math.pow(seal, p.beta) * Math.pow(Math.min(speed, 1.5), p.zeta);   // no leak
-    const multP = multP0 / A(p.leak, i);
-    const po = { speed, FR, G, multP, sovMenRatio };
-    let kwR = 0, kwS = 0;
-    for (const s of R.sectors) {
-      const x = P[s];
-      let durS;
-      const cap = realDepthTotal(s) * (1 + supply) - depth[s];
-      if (ph !== 'autumn') {
-        durS = x.days / speed;
-        for (const [name, [sec, dF, dS]] of Object.entries(R.milestones)) {
-          if (sec !== s) continue;
-          if (ph === 'frontier' && dS === 0) ms[name] = T[s] + dF / speed;
-          if (ph === 'summer' && dS > 0) ms[name] = T[s] + dS / speed;
-        }
-        T[s] += durS; depth[s] += x.depth;
-        if (ph === 'frontier') ms['frontierEnd_' + s] = T[s];
-        if (ph === 'summer') { ms['summerEnd_' + s] = T[s]; T[s] += R.pauseAfterSummer[s]; }
-      } else if (s === 'N') {                          // Tikhvin: one operation; a faster one goes deeper
-        durS = x.days / speed; ms.autumnStart_N = T[s];
-        const want = x.depth * speed; capacity.N = depth[s] + want; depth[s] += Math.min(want, cap); T[s] += durS;
-      } else {                                         // Typhoon and the Donbas: dry days, mud and frost to the halt
-        const rs = day(R.autumnStart[s]), rh = day(R.autumnHalt[s]);
-        const rateR = x.depth / autumnDepth(rs, rh, 1);
-        const want = autumnDepth(T[s], rh, rateR * speed);
-        ms['autumnStart_' + s] = T[s];
-        durS = rh - T[s]; capacity[s] = depth[s] + want; depth[s] += Math.max(0, Math.min(want, cap));
+  const o = { levers: L.label, months: [] };
+  let G = { men: L.gMen, tanks: L.gTanks, air: START.gAir * L.gAirX };
+  let S = { men: L.sMen, tanks: START.sTanks, air: START.sAir };
+  const depth = { N: 0, C: 0, S: 0 }, rail = { N: 0, C: 0, S: 0 }, reach = { N: 0, C: 0, S: 0 };
+  const ev = {};
+  const tot = { 1941: { sCas: 0, sIrr: 0, pris: 0, sTl: 0, sAl: 0, gCas: 0, gTl: 0, gAl: 0 }, 1942: { sCas: 0, sIrr: 0, pris: 0, sTl: 0, sAl: 0, gCas: 0, gTl: 0, gAl: 0 } };
+  // supply: lorries and fuel extend the reach; more divisions and aircraft eat into it
+  const lorryIdx = Math.pow(Math.pow(L.lorries, 0.5) * Math.pow(L.fuel, 0.3) , p.lorryE);   // the reach is set by railheads and roads; a division brings its own transport, so more divisions do not shorten it
+  const railIdx = Math.pow(L.railX, p.railE);
+  const startFrac = L.start === '1941-06-01' ? 1.0 : 0.3;
+  const hubAt = mm => { if (!ev.Moscow || ev.Moscow > mm + '-31') return 1; const since = (day(mm + '-15') - day(ev.Moscow)) / 30.4; return 1 - (1 - p.hub) * (1 - 0.5 * Math.min(1, Math.max(0, since) / 12)); };
+  let typhoonDay = NaN, siegeMonths = 0, effort = 0, moscowOn = false, blueOn = false, stalPressure = 0, cauc = 0, winterOn = false;
+  for (let t = 0; t < MONTHS.length; t++) {
+    const m = MONTHS[t], yr = +m.slice(0, 4), Y = tot[yr];
+    const frac = t === 0 ? startFrac : 1;
+    const wx = m === '1941-10' ? p.mudOct : m === '1941-11' ? p.mudNov : m === '1942-04' ? p.thaw : 1;   // weather draw: more mud means a smaller season factor
+    const season = K.season[m] != null ? Math.min(1, K.season[m] * (wx > 1 ? 1 / wx : (2 - wx))) : 1;
+    const mStart = day(m + '-01'), mEnd = mStart + monthDays(m);
+    const seasonOf = a => (a === 'S' && K.seasonS[m] != null) ? K.seasonS[m] : season;
+    const sMen0 = S.men;
+    const gP = comp(G.men / 3300, G.tanks / 3600, G.air / 2800, GWT);
+    const sP = comp(S.men / 2900, Math.max(0.05, S.tanks / 22600), Math.max(0.05, S.air / 20000), SWT);
+    const FR = gP / sP;
+    // the Stavka's weight between the axes, relative to reality (1941: the south; 1942: Moscow); a lighter axis is easier to attack
+    const real41 = { N: 0.2, C: 0.4, S: 0.4 }, real42 = { N: 0.15, C: 0.5, S: 0.35 };
+    const alloc41 = { south: real41, centre: { N: 0.2, C: 0.5, S: 0.3 }, balanced: { N: 0.25, C: 0.4, S: 0.35 } }[L.stavka41] || real41;
+    const alloc42 = { moscow: real42, south: { N: 0.15, C: 0.35, S: 0.5 }, balanced: { N: 0.15, C: 0.42, S: 0.43 } }[L.stavka42] || real42;
+    const hubF = hubAt(m);   // Moscow's fall slows the movement of reserves to the other theatres
+    const wgt = a => (yr === 1941 ? alloc41[a] / real41[a] : alloc42[a] / real42[a]) * (a !== 'C' ? hubF : 1);
+    // ---- what each side is doing this month
+    let on = { N: 0, C: 0, S: 0 }, intensity = 1, sovOff = false, prep = 1;
+    if (yr === 1941) {
+      on = { N: 0.9, C: 1.0, S: 0.85 };
+      // after Smolensk the Centre recovers (Yelnya, replacements, stocks) and, if the Kiev diversion is on, sends its panzers
+      // south; Typhoon opens at the real date, brought forward by the share of an earlier Smolensk that recovery allows
+      if (m >= '1941-08' && m <= '1941-10') {
+        const smol = ev.Smolensk ? day(ev.Smolensk) : mEnd;
+        const ty = (REF ? REF.typhoon - (REF.smolensk - smol) * p.keep : day('1941-10-02')) + (L.kievDiversion ? 0 : -7 * p.kievDelay);
+        on.C = Math.max(0, Math.min(1, (mEnd - ty) / (mEnd - mStart)));
+        if (m === '1941-09') on.S = L.kievDiversion ? 1.25 : 0.9;                     // Kiev: the panzers of the Centre help in the south
+        if (m === '1941-08' && on.C > 0.9) on.C = 0.9;
+        typhoonDay = ty;
       }
-      const durRatio = Math.max(0.3, durS / x.days);
-      // Soviet losses (Krivosheev basis)
-      const deathsR = 0.6 * x.san, mcR = Math.max(0, x.irr - deathsR);
-      const mc0 = mcR * multP0, mcS = mcR * multP;
-      const kwF = Math.pow(sovMenRatio, p.kappa) * Math.pow(G, p.mu) * Math.pow(durRatio, p.theta);
-      const esc = Math.max(0, mc0 - mcS) * p.phi;                    // escapers who become casualties breaking out
-      const surplus = Math.max(0, mcS - mcR) * 0.3;                  // extra prisoners who would otherwise have been casualties
-      const deathsS = Math.max(0, deathsR * kwF + 0.35 * (esc - surplus)), sanS = Math.max(0, x.san * kwF + 0.65 * (esc - surplus));
-      kwR += deathsR + x.san; kwS += deathsS + sanS;
-      const prisS = x.pris * multP;
-      const tlS = Math.min(x.tl * sovTankRatio * A(p.tankAdj, i), x.tanks * sovTankRatio * 1.05);
-      const glS = x.gl * (p.gunPocket * multP + (1 - p.gunPocket) * (deathsS + sanS) / (deathsR + x.san));
-      const g = ph === 'frontier' ? 0.5 : 0.25;                       // share of operation air losses on the ground
-      const gf = ph === 'frontier' ? A([p.groundAir], 0) : 1;
-      const alS = x.al * (g * gf + (1 - g) * Math.pow(LW, p.gamma) * Math.pow(durRatio, 0.5)) * Math.pow(sovAirRatio, 0.3);
-      tankSaved += x.tl - tlS;
-      airSaved += x.al - alS;
-      saved += 0.8 * ((mcR + deathsR) - (mcS + deathsS)) + 0.3 * (x.san - sanS);
-      out.sov.irr += mcS + deathsS; out.sov.san += sanS; out.sov.mc += mcS; out.sov.pris += prisS;
-      out.sov.tl += tlS; out.sov.gl += glS; out.sov.al += alS;
-      po[s] = { durS, depth: depth[s], irr: mcS + deathsS, san: sanS, pris: prisS, tl: tlS, gl: glS, al: alS };
+      if (m >= '1941-10') on.N = m === '1941-10' ? 0.5 : 0.3;
+      if (m === '1941-12') { on = { N: 0, C: 0, S: 0 }; }
     }
-    po.tot = R.sectors.reduce((a, s) => ({ irr: a.irr + po[s].irr, san: a.san + po[s].san, pris: a.pris + po[s].pris, tl: a.tl + po[s].tl }), { irr: 0, san: 0, pris: 0, tl: 0 });
-    // German losses: 90 per cent follows the Soviet killed and wounded (which rise with German strength); 10 per cent with time
-    const gR = P.ger.cas;
-    const durPh = R.sectors.reduce((a, s) => a + po[s].durS / P[s].days, 0) / 3;
-    const gS = gR * (0.9 * (kwS / kwR) * Math.pow(gerMenRatio, p.nu) * AX(p.exch, i) * Math.pow(LW, -p.lambda) + 0.1 * durPh);
-    const gtlS = P.ger.tl * Math.pow(sovTankRatio, p.delta) * Math.sqrt(AX(p.exch, i)) * Math.sqrt(gerTankRatio) * Math.sqrt(Math.max(0.5, kwS / kwR));
-    const galS = P.ger.al * LW * Math.pow(sovAirRatio, 0.5) * (ph === 'frontier' ? A([p.airWar], 0) : 1);
-    out.ger.cas += gS; out.ger.tl += gtlS; out.ger.al += galS;
-    gerCasCumR += gR; gerCasCumS += gS; gerTlR += P.ger.tl; gerTlS += gtlS;
-    // German strength for the next phase
-    const frac = gerCasCumR / gerCasHaltR;
-    const netR = (R.ger.shortfallDec + R.ger.replDec) * frac, netS = gerNet(netR, gerCasCumS / gerCasCumR, tfHalt);
-    gerMenRatio = (L.gerMen - netS + R.ger.replDec * frac * L.replF) / (R.ger.men0 - netR + R.ger.replDec * frac);
-    const arrR = R.ger.tankArrivalsDec * frac, arrS = arrR * L.gerProd41 * L.gerEastShare;
-    gerTankRatio = Math.max(0.2, (L.gerTanks - gerTlS + arrS) / (R.ger.tanks0 - gerTlR + arrR));
-    Object.assign(po, { gerCas: gS, gerTl: gtlS, gerAl: galS, gerReal: gR });
-    phaseOut[ph] = po;
+    if (m >= '1941-12' && m <= '1942-03') { winterOn = true; sovOff = !L.winterLimited || m <= '1942-01'; intensity = sovOff ? 1 : 0.5; }
+    if (m === '1942-04') intensity = 0.35;
+    if (m === '1942-05') { intensity = 0.8; sovOff = !L.noKharkov; }
+    if (yr === 1942 && m >= '1942-05') {
+      if (L.moscow42 && !moscowOn && !ev.Moscow && !ev.MoscowSpent && depth.C < L.moscowKm) moscowOn = true;
+      if (moscowOn) { on.C = K.offFront * (m === '1942-05' ? 0.35 : 1); prep = Math.max(0.1, 1 - L.moscowDef * p.defX); intensity = 1; if (m !== '1942-05') sovOff = false; }   // from 20 May; a set-piece attack on a held front
+      const blueGo = L.blueStart === 'after Moscow' ? (m >= '1942-06' && ((!!(ev.Moscow || ev.MoscowSpent) && !moscowOn) || m >= '1942-07')) : (m >= L.blueStart && !moscowOn);
+      if (blueGo && m <= '1942-11') { blueOn = true; on.S = 1; intensity = 1; }
+    }
+    // ---- supply reach, then the advance on each axis
+    const adv = { N: 0, C: 0, S: 0 };
+    let advW = 0;
+    for (const a of AXES) {
+      const railFrac = t === 0 ? 0.3 + (frac - 0.3) * p.railTime : frac;
+      rail[a] = Math.min(depth[a] * (yr === 1941 ? K.railLag : K.railLag42), rail[a] + K.railRate * (yr === 1941 ? 1 : K.railRate42X) * railIdx * (season < 0.5 ? 0.5 : 1) * railFrac);
+      reach[a] = rail[a] + K.lorryRange * lorryIdx * (season < 0.3 ? K.lorryMud : 1);   // lorries manage far less in mud and snow
+      const room = L.supplyLimit ? Math.max(0, reach[a] + K.overrun - depth[a]) : 1e9;
+      const alertF = !L.alert ? 1 : t <= 1 ? 1 - L.alert * (1 - p.alertPace) : t <= 4 ? 1 - L.alert * (1 - p.alertSummer) : 1;
+      // the Moscow defence zone and the reserve armies before the capital: by calendar, and stronger with more Soviet men in the field
+      const prep41 = (a === 'C' && yr === 1941 && K.mosDef41[m] != null && depth.C > 700) ? Math.max(0.1, 1 - K.mosDef41[m] * dev(S.men, REF && REF.sMen[t], p.mosRes)) : 1;
+      const flank = (a === 'C' && yr === 1941 && !L.kievDiversion && m <= '1941-10') ? 1 - p.flankCost : 1;   // Guderian covering the Southwestern Front
+      // beyond the Mozhaisk line the drive on Moscow is a set-piece attack on a held front, as in 1942
+      const setPiece = (a === 'C' && yr === 1941 && depth.C >= K.mozhaisk) ? K.offFront41 : 1;
+      const isSet = prep < 1 || setPiece < 1;
+      const local = Math.pow(wgt(a), -p.reserveE * (isSet ? 1 : 0.4));   // reserves tell most against a set-piece attack
+      // in open country the spearheads move as supply allows (force ratio to a small power); against a held front force decides
+      const fPow = isSet ? Math.pow(FR, 0.7) * dev(FR, REF && REF.FR[t], p.alphaSet - 0.7) : Math.pow(FR, 0.3) * dev(FR, REF && REF.FR[t], p.alpha - 0.3);
+      let km = K.paceK[a] * on[a] * fPow * seasonOf(a) * alertF * frac * local * (a === 'C' ? prep * prep41 * flank * setPiece : 1);
+      if (yr === 1941 && a === 'S' && t <= 3) km *= K.sEarly;                 // Brody-Dubno, Uman and the Dnieper
+      if (a === 'N') km = Math.min(km, Math.max(0, (m >= '1941-10' ? K.capN : 850) - depth.N));   // Leningrad invested in September; Tikhvin in the autumn
+      if (a === 'S' && blueOn) km = Math.min(km, Math.max(0, 1500 - depth.S));
+      if (yr === 1941 && a === 'N' && t >= 1 && t <= 2) km *= K.nLuga;          // the Luga Line
+      if (a === 'S' && blueOn && depth.S >= 1500) km = 0;                    // the Volga reached: the fight is for the city
+      km = Math.max(0, Math.min(km, room));
+      adv[a] = km; depth[a] += km; advW += km * ({ N: 0.25, C: 0.4, S: 0.35 })[a];
+    }
+    if (blueOn && depth.S > 1000) cauc = Math.max(cauc, Math.min(cauc + adv.S * 0.9 + (depth.S >= 1500 ? 0.5 * K.paceK.S * seasonOf('S') * Math.pow(FR, 0.3) * dev(FR, REF && REF.FR[t], p.alpha - 0.3) : 0), Math.max(0, (reach.S + K.overrun - 1000) * K.caucShare)));
+    // ---- Soviet winter counter-offensive: ground regained on the Moscow axis
+    let regain = 0;
+    if (winterOn && m >= '1941-12' && depth.N > 850 && !ev.TikhvinRetaken && !ev.Leningrad) {   // Tikhvin: retaken if the Soviets are strong enough; else Leningrad starves
+      if (sovOff && (sP / gP) >= (REF ? REF.R[t] : sP / gP) * p.tikhvin) { depth.N = 850; rail.N = Math.min(rail.N, 850); ev.TikhvinRetaken = m + '-09'; }
+    }
+    if (depth.N > 850 && !ev.Leningrad) { siegeMonths += 1; if (siegeMonths >= p.siege) { ev.Leningrad = m + '-15'; } }
+    if (winterOn && sovOff && m <= '1942-03') { regain = K.winterRegain * Math.pow(sP / gP, 1.2) * dev(sP / gP, REF && REF.R[t], p.winterD) * (m === '1941-12' ? 1.4 : 1) * hubF /* the reserve armies formed around Moscow */; depth.C = Math.max(ev.Moscow ? L.moscowKm : 0, depth.C - regain); rail.C = Math.min(rail.C, depth.C); }
+    // ---- pockets
+    const forward = yr === 1941 ? 1 : 0.75;
+    const leak = (L.alert && t <= 1) ? 1 + L.alert * (p.alertLeak - 1) : 1;
+    const sealLever = Math.pow(L.gMen / 3300, 0.4) * Math.pow(L.gAirX, 0.15);                 // the premise's extra men and aircraft
+    const sealWear = Math.pow((G.men / 3300) / (L.gMen / 3300), 0.4);                          // the attrition since, as in reality
+    const advWw = AXES.reduce((acc, a) => acc + adv[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);   // the men standing on each axis
+    let pris = K.pockets * S.men * (advWw / 400) * forward * sealWear * Math.pow(sealLever * (L.sovDepth && t <= 2 ? 0.7 : 1) / leak, p.pocketE);
+    if (m === '1941-09' && L.kievWithdraw) pris *= 0.45;
+    if (m === '1941-09' && !L.kievDiversion) pris *= 0.6;                            // no northern pincer: the Kiev pocket is far smaller
+    if (m === '1942-05' && sovOff) pris += 240 * Math.pow(G.men / 3300, 0.5);          // the Kharkov offensive cut off at Izyum
+    // ---- attrition
+    const act = Math.max(0.35, Math.max(...Object.values(on)), sovOff ? 1 : 0, moscowOn ? 1 : 0) * intensity * frac;
+    const sKw = K.sCas * Math.pow(gP, 0.7) * dev(gP, REF && REF.gP[t], p.exchD) * act * (sovOff ? 1.6 : 1) * Math.pow(prep, 0.3) * (yr === 1942 && m >= '1942-06' ? K.sCas42X : 1);
+    const gCas = K.gCas * Math.pow(sP, 0.5) * dev(sP, REF && REF.sP[t], p.gExchD) * act * (sovOff ? 1.3 : 1) * ((L.alert && t <= 1) ? 1.15 : 1) / Math.pow(L.gAirX, 0.1) * Math.pow(G.men / 3300, 0.4) * (yr === 1942 && m >= '1942-06' ? K.gCas42X : 1) / Math.pow(prep, 0.5);   // stronger defences cost the attacker
+    const sTl = S.tanks * K.sTank[yr] * act + 0.5 * pris;
+    const gTl = G.tanks * K.gTank * act * Math.pow(sP, 0.3);
+    const groundAir = (t === 0 && L.alert) ? 1 - L.alert * (1 - p.alertAir) : 1;
+    const sAl = S.air * K.sAir[yr] * act * (t === 0 ? 1.5 * groundAir : 1) * Math.pow(L.gAirX, 0.4);
+    const gAl = G.air * K.gAir * act * Math.pow(sP, 0.3);
+    // ---- events
+    if (moscowOn) { effort += (m === '1942-05' ? 0.35 : 1); if (depth.C >= L.moscowKm) moscowOn = false; else if (effort >= p.culm) { ev.MoscowSpent = m + '-28'; moscowOn = false; } }
+    if (blueOn && depth.S >= 1500 && !ev.StalingradFalls) {
+      if (!ev.VolgaReached) ev.VolgaReached = dateIn(m, Math.min(1, (1500 - (depth.S - adv.S)) / Math.max(1, adv.S)));
+      const vf = ev.VolgaReached && ev.VolgaReached.slice(0, 7) === m ? 1 - (+ev.VolgaReached.slice(8) / monthDays(m)) : 1;
+      if (m <= '1942-11') stalPressure += FR * Math.pow(wgt('S'), -p.reserveE) * vf;   // wgt('S') already carries the loss of the Moscow hub
+      if (REF && stalPressure >= REF.stal * K.stalX * p.stalX) ev.StalingradFalls = m + '-15';
+    }
+    for (const a of AXES) for (const [name, km0] of MILES[a]) { const km = name === 'Moscow' ? L.moscowKm : km0; if (!ev[name] && depth[a] >= km) ev[name] = dateIn(m, Math.min(1, (km - (depth[a] - adv[a])) / Math.max(1, adv[a]))); }
+    for (const [name, km] of CAUC) if (!ev[name] && cauc >= km) ev[name] = m + '-20';
+    // ---- Soviet production base: the real path, moved by the difference in territory lost (and Moscow's factories)
+    const lost = 0.12 * Math.min(1, depth.N / 850) + 0.18 * Math.min(1, depth.C / 1000) + 0.3 * Math.min(1, depth.S / 1000) + 0.1 * Math.max(0, Math.min(1, (depth.S - 1000) / 500)) + (ev.Moscow ? 0.12 : 0) + (ev.StalingradFalls ? 0.05 : 0) + (ev.Leningrad ? 0.04 : 0);
+    const ind = Math.max(0.2, 1 - K.lostW * (lost - K.lostReal[t]));
+    // ---- stocks
+    const prodT = (yr === 1941 ? PROD.sTanks41 : PROD.sTanks42) * ind * L.sProdX * frac + (L.lendLease ? (t >= 4 ? (yr === 1941 ? 170 : 230) : 0) : 0);
+    const prodA = (yr === 1941 ? PROD.sAir41 : PROD.sAir42) * ind * L.sProdX * frac + (L.lendLease && t >= 4 ? (yr === 1941 ? 150 : 200) : 0);
+    const mob = (yr === 1941 ? PROD.sMen41 : PROD.sMen42) * (0.75 + 0.25 * ind) * frac - (t >= 4 && t <= 7 ? 65 * L.farEastHeld : 0);
+    const netLoss = pris + 0.35 * sKw + 0.2 * sKw;                            // dead, and the wounded away for months
+    S = { men: Math.max(500, S.men - netLoss + mob), tanks: Math.max(300, S.tanks - sTl + prodT), air: Math.max(300, S.air - sAl + prodA) };
+    const sick = ((m >= '1941-12' && m <= '1942-02') ? 60 : 15) * (G.men / 3300);
+    G = { men: Math.max(500, G.men - gCas - sick + (yr === 1941 ? PROD.gRepl41 : PROD.gRepl42) * L.gReplX * frac * (m >= '1941-12' && m <= '1942-05' ? 1.5 : 1)),
+          tanks: Math.max(200, G.tanks - gTl + (yr === 1941 ? PROD.gTanksE41 : PROD.gTanksE42) * L.gProdX * frac),
+          air: Math.max(200, G.air - gAl + (yr === 1941 ? PROD.gAir41 : PROD.gAir42) * L.gAirX * frac) };
+    Y.sCas += sKw + pris; Y.sIrr += pris + 0.35 * sKw; Y.pris += pris; Y.sTl += sTl; Y.sAl += sAl; Y.gCas += gCas; Y.gTl += gTl; Y.gAl += gAl;
+    o.months.push({ m, depth: { ...depth }, reach: { ...reach }, cauc, gP, sP, sMen0, gMen: G.men, gTanks: G.tanks, gAir: G.air, sMen: S.men, sTanks: S.tanks, sAir: S.air, ind, FR, pris, sKw, gCas, regain, moscowOn, blueOn, stalPressure });
   }
-  // background (other theatres, positional fighting): scales with the length of the campaign and the mean effects
-  const mP = (phaseOut.frontier.multP + phaseOut.summer.multP + phaseOut.autumn.multP) / 3;
-  const B = R.background, BA = R.bgAir;
-  const bMc = Math.max(0, B.irr - 0.6 * B.san);
-  const bg = { irr: bMc * mP + 0.6 * B.san * tfHalt, san: B.san * tfHalt, pris: B.pris * mP, tl: B.tl * tfHalt,
-               gl: B.gl * (0.5 * mP + 0.5 * tfHalt),
-               al: BA.frontierGround * A([p.groundAir], 0) + BA.combat * Math.pow(LW, p.gamma) * Math.sqrt(tfHalt) + BA.nonCombat * tfHalt };
-  out.sov.irr += bg.irr; out.sov.san += bg.san; out.sov.pris += bg.pris; out.sov.tl += bg.tl; out.sov.gl += bg.gl; out.sov.al += bg.al;
-  saved += 0.8 * (B.irr - bg.irr) + 0.3 * (B.san - bg.san);
-  tankSaved += B.tl - bg.tl; airSaved += B.al - bg.al;
-  out.ger.km = out.ger.cas * R.gerKmShare;
-  const area = {};
-  let areaTot = 0;
-  for (const s of R.sectors) { area[s] = R.areaHigh[s] * depth[s] / realDepthTotal(s); areaTot += area[s]; }
-  o.y1941 = {
-    sov: out.sov, ger: out.ger, ratioAll: (out.sov.irr + out.sov.san) / out.ger.cas, ratioIrr: out.sov.irr / out.ger.km,
-    tankRatio: out.sov.tl / out.ger.tl, airRatio: out.sov.al / out.ger.al,
-    depth, area, areaTot, supply,
-    capacity: { C: capacity.C, S: capacity.S, N: capacity.N },     // depth the advance could have reached without the supply limit
-    capBinds: (capacity.C > depth.C + 1 || capacity.S > depth.S + 1) ? 1 : 0,
-    phases: phaseOut,
-    dates: Object.fromEntries(Object.entries(ms).map(([k, v]) => [k, iso(Math.round(v))])),
-  };
-  // ---- stocks on 5 Dec
-  const llT = L.lendLease ? 0 : R.sov.llTanksDec, llA = L.lendLease ? 0 : R.sov.llAirDec;
-  const sovTanksDec = R.sov.tanksDec + tankSaved - llT;
-  const sovAirDec = R.sov.airDec + airSaved - llA;
-  const feMen = L.farEastHeld * p.feTransfer, feTanks = L.farEastHeld * p.feTanks;
-  const sovFieldDec = R.sov.fieldDec + saved - feMen + L.sovMobExtra;
-  // front tanks: the stock change without Lend-Lease scales the front share; the British tanks themselves went to the front
-  const frontTanksDec = R.sov.frontTanksDec * (sovTanksDec + llT) / R.sov.tanksDec - R.llFrontShare * llT - feTanks;
-  const frontAirDec = R.sov.frontAirDec * sovAirDec / R.sov.airDec;
-  const netR = R.ger.shortfallDec + R.ger.replDec, netS = gerNet(netR, gerCasCumS / gerCasCumR, tfHalt);
-  const gerMenDec = L.gerMen - netS + R.ger.replDec * L.replF, gerMenDecR = R.ger.men0 - netR + R.ger.replDec;
-  const arrS = R.ger.tankArrivalsDec * L.gerProd41 * L.gerEastShare;
-  const gerTanksDec = L.gerTanks - out.ger.tl + arrS, gerTanksDecR = R.ger.tanks0 - gerTlHaltR + R.ger.tankArrivalsDec;
-  o.dec1941 = { sovField: sovFieldDec, sovTanks: sovTanksDec, sovFrontTanks: frontTanksDec, sovAir: sovAirDec, sovFrontAir: frontAirDec,
-                gerMen: gerMenDec, gerTanks: gerTanksDec, saved, feMen };
-  // ---- winter counter-offensive, 5 Dec-31 Mar
-  const W = comp(sovFieldDec / R.sov.fieldDec, Math.max(0.1, frontTanksDec / R.sov.frontTanksDec), frontAirDec / R.sov.frontAirDec, SW);
-  const lwW = L.lw41 * (L.lfl2Stays ? p.lfl2 : 1);
-  const gMenW = gerMenDec / gerMenDecR;
-  const D = comp(gMenW, Math.max(0.1, gerTanksDec / gerTanksDecR), lwW, GW);
-  const Q = W / D, reg = Math.pow(Q, p.kappaW);
-  const w = R.winter;
-  const win = {
-    W, D, Q, regainFactor: reg,
-    strike: { men: w.strike.men * sovFieldDec / R.sov.fieldDec, tanks: w.strike.tanks * frontTanksDec / R.sov.frontTanksDec, air: w.strike.air * frontAirDec / R.sov.frontAirDec },
-    sovCas: w.sovCas * Math.pow(W, 0.7) * Math.pow(D, 0.3),
-    gerCas: w.gerCas * Math.pow(W, 0.8) * Math.sqrt(gMenW) * Math.pow(lwW, -0.1),     // more pressure and more men in the line: more losses
-    pris: w.pris * Math.sqrt(D / W), sovTl: w.sovTl * (frontTanksDec / R.sov.frontTanksDec) * Math.pow(D, 0.3),
-    gerTl: w.gerTl * Math.pow(W, 0.8), sovAl: w.sovAl * Math.sqrt(frontAirDec / R.sov.frontAirDec) * Math.sqrt(lwW), gerAl: w.gerAl * Math.pow(lwW, 0.7),
-    regainArea: Object.values(R.winterRegainArea).reduce((a, b) => a + b, 0) * reg,
-    shoulderN: w.shoulderStart.N + w.shoulderRegain.N * reg, shoulderS: w.shoulderStart.S + w.shoulderRegain.S * reg,
-  };
-  win.sovIrr = w.sovIrr * win.sovCas / w.sovCas; win.gerKm = w.gerKm * win.gerCas / w.gerCas;
-  win.areaAfter = areaTot - win.regainArea;
-  win.ratio = win.sovCas / win.gerCas;
-  o.winter = win;
-  // calendar 1941 (to 31 Dec): add December's share of the winter
-  const fD = R.dec.sovIrr / w.sovIrr, fDs = (R.dec.sovIrr + R.dec.sovSan) / w.sovCas, fDg = R.dec.gerCas / w.gerCas, fT = R.dec.tl / w.sovTl;
-  o.cal1941 = {
-    sovIrr: out.sov.irr + win.sovIrr * fD, sovCas: out.sov.irr + out.sov.san + win.sovCas * fDs,
-    gerCas: out.ger.cas + win.gerCas * fDg, gerKm: out.ger.km + win.gerKm * fDg,
-    sovTl: out.sov.tl + win.sovTl * fT, gerTl: out.ger.tl + win.gerTl * R.decShare.gerTl,
-    sovAl: out.sov.al + win.sovAl * R.decShare.sovAl, gerAl: out.ger.al + win.gerAl * R.decShare.gerAl,
-    sovTanksJan: sovTanksDec + (R.sov.tanksJan - R.sov.tanksDec) - (win.sovTl - w.sovTl) * fT - (L.lendLease ? 0 : R.llTanksDecJan),
-  };
-  o.cal1941.ratioAll = o.cal1941.sovCas / o.cal1941.gerCas;
-  // ---- 1 May 1942
-  const savedW = 0.8 * (w.sovIrr - win.sovIrr) + 0.3 * ((w.sovCas - w.sovIrr) - (win.sovCas - win.sovIrr));
-  const sovFieldMay = R.sov.fieldMay + saved + savedW - feMen + L.sovMobExtra;
-  const llTM = L.lendLease ? 0 : R.sov.llTanksMay;
-  const sovTanksMay = sovTanksDec + llT + R.sov.prodTanksDecApr * L.sovProd42 + (R.sov.llTanksMay - R.sov.llTanksDec) - llTM - win.sovTl;
-  const sovFrontTanksMay = R.sov.frontTanksMay * (sovTanksMay + llTM) / R.sov.tanksMay - R.llFrontShare * llTM - feTanks;
-  const llAM = L.lendLease ? 0 : R.sov.llAirMay;
-  const airMayR = R.sov.airDec + R.sov.llAirMay - R.sov.llAirDec + R.sov.prodAirDecApr - w.sovAl;
-  const airMayS = sovAirDec + llA + R.sov.prodAirDecApr * L.sovProd42 + (R.sov.llAirMay - R.sov.llAirDec) - llAM - win.sovAl;
-  const sovFrontAirMay = R.sov.frontAirMay * airMayS / airMayR;
-  const tfMay = (day('1942-05-01') - t0) / (day('1942-05-01') - tr0);
-  const netRM = R.ger.shortfallMay + R.ger.replMay, cumR = gerCasHaltR + w.gerCas, cumS = gerCasCumS + win.gerCas;
-  const gerMenMay = L.gerMen - gerNet(netRM, cumS / cumR, tfMay) + R.ger.replMay * L.replF, gerMenMayR = R.ger.men0 - R.ger.shortfallMay;
-  const arrMay = (R.ger.tankArrivalsDec * L.gerProd41 + R.ger.tankArrivalsDecApr * L.gerProd42) * L.gerEastShare;
-  const gerTanksMay = L.gerTanks - out.ger.tl - win.gerTl + arrMay;
-  const lwMay = R.ger.lwMay * L.lw42;
-  o.may1942 = { sovField: sovFieldMay, sovTanks: sovTanksMay, sovFrontTanks: sovFrontTanksMay, sovFrontAir: sovFrontAirMay,
-                gerMen: gerMenMay, gerMenReal: gerMenMayR, gerTanks: gerTanksMay, gerTanksReal: R.ger.tanksMay, lwEast: lwMay };
-  // ---- the Soviet spring offensive towards Kharkov (real: 765k men, ~1,200 tanks, ~900 aircraft; cut off at Izyum, ~240k prisoners)
-  const khR = { men: 765, tanks: 1200, air: 900, pris: 240 };
-  const kh = { men: khR.men * sovFieldMay / R.sov.fieldMay, tanks: khR.tanks * sovFrontTanksMay / R.sov.frontTanksMay, air: khR.air * sovFrontAirMay / R.sov.frontAirMay };
-  const khS = kh.men / khR.men, khG = (gerMenMay / gerMenMayR) * Math.pow(L.lw42, 0.3);
-  kh.pris = khR.pris * Math.pow(khS, 1 - p.beta) * Math.pow(khG, p.beta);
-  o.kharkov = kh;
-  // ---- the German offensive on Moscow (scenario event; for reality a what-if), succeeding only if the ring closes in time
-  const ty = R.typhoon;
-  const gM = { men: p.phiG * gerMenMay, tanks: p.phiT * gerTanksMay, air: p.phiA * lwMay };
-  const sM = { men: p.sigma * sovFieldMay, tanks: p.sigma * sovFrontTanksMay, air: p.sigma * sovFrontAirMay };
-  const FRM = comp(gM.men / ty.gMen, gM.tanks / ty.gTanks, gM.air / ty.gAir, GW) / comp(sM.men / ty.sMen, sM.tanks / ty.sTanks, sM.air / ty.sAir, SW);
-  const rate = p.rate0 * Math.pow(FRM, p.alpha) * p.prepared;
-  const dist = Math.max(win.shoulderN, win.shoulderS);
-  const closeDays = dist / rate * p.friction;
-  const success = closeDays <= p.dMax ? 1 : 0;
-  const capture = ty.captureFrac * Math.pow(ty.closeDays / closeDays, 0.4) * p.depthOutside;
-  const tStart = day('1942-05-20');
-  o.moscow = {
-    gM, sM, FR: FRM, rate, closeDays, success, distN: win.shoulderN, distS: win.shoulderS,
-    prisoners: success ? sM.men * capture : 0,
-    close: success ? iso(Math.round(tStart + closeDays)) : 'none',
-    enter: success ? iso(Math.round(tStart + closeDays + p.enterDays)) : 'none',
-    blueEarliest: success ? iso(Math.round(tStart + closeDays + p.reduceDays + p.redeployDays)) : 'none',
-  };
+  const nov = o.months[17];
+  const resPower = comp(nov.sMen, Math.max(50, nov.sTanks), Math.max(50, nov.sAir), SWT) * hubAt('1942-11');   // the reserves that can be brought to the Don by November
+  const flank = comp(nov.gMen, nov.gTanks, nov.gAir, GWT);
+  const ratio = resPower / flank;
+  o.uranus = { ratio, breakthrough: REF && ratio >= REF.uranus * K.uranusX * p.uranusX ? 1 : 0 };
+  o.events = ev; ev.Typhoon = Number.isFinite(typhoonDay) ? iso(Math.round(typhoonDay)) : 'none'; o.y41 = tot[1941]; o.y42 = tot[1942];
+  o.y41.ratio = o.y41.sCas / o.y41.gCas; o.y42.ratio = o.y42.sCas / o.y42.gCas;
+  o.end41 = o.months[6]; o.mar42 = o.months[9]; o.may42 = o.months[11]; o.end42 = o.months[18];
+  const mos41 = ev.Moscow && ev.Moscow < '1942' ? 1 : 0, mos42 = ev.Moscow && ev.Moscow >= '1942' ? 1 : 0;
+  o.moscow = { falls: ev.Moscow ? 1 : 0, falls1941: mos41, falls1942: mos42, date: ev.Moscow || 'none', date1941: mos41 ? ev.Moscow : 'none', date1942: mos42 ? ev.Moscow : 'none', spent: ev.MoscowSpent || 'none' };
+  o.stalingrad = { falls: ev.StalingradFalls ? 1 : 0, date: ev.StalingradFalls || 'none', volga: ev.VolgaReached || 'none', pressure: o.end42.stalPressure };
+  o.leningrad = { falls: ev.Leningrad ? 1 : 0, date: ev.Leningrad || 'none', tikhvinRetaken: ev.TikhvinRetaken || 'none' };
+  o.caucasus = { depth: o.end42.cauc, maikop: ev.Maikop || 'none', grozny: ev.Grozny || 'none', baku: ev.Baku || 'none' };
   return o;
 }
+function setRef() { REF = null; const r = run(LEVERS_REAL, sampleParams(null)); REF = { stal: r.end42.stalPressure, uranus: r.uranus.ratio, typhoon: day('1941-10-02'), smolensk: day(r.events.Smolensk), FR: r.months.map(x => x.FR), gP: r.months.map(x => x.gP), sP: r.months.map(x => x.sP), sMen: r.months.map(x => x.sMen0), R: r.months.map(x => x.sP / x.gP) }; return REF; }
 
-// ------------------------------------------------------------------ Monte Carlo
-function rngFrom(seed) {             // mulberry32
-  let a = seed >>> 0;
-  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-}
-function flatten(o, pre = '', acc = {}) {
-  for (const [k, v] of Object.entries(o)) {
-    if (v && typeof v === 'object') flatten(v, pre + k + '.', acc);
-    else acc[pre + k] = v;
-  }
-  return acc;
-}
-// quantiles 10/50/90 (and the mean as a fourth entry); date outputs over the runs that have a date, with their share in key#share
-function monteCarlo(L, n = 2000, seed = 1941) {
+// ------------------------------------------------------------------ Monte Carlo and tools
+function rngFrom(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function flatten(o, pre = '', acc = {}) { for (const [k, v] of Object.entries(o)) { if (Array.isArray(v)) v.forEach((x, i) => flatten(x, pre + k + '.' + i + '.', acc)); else if (v && typeof v === 'object') flatten(v, pre + k + '.', acc); else acc[pre + k] = v; } return acc; }
+const day = s => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / 864e5;
+const iso = d => new Date(d * 864e5).toISOString().slice(0, 10);
+function monteCarlo(L, n = 800, seed = 1941, fix = null) {
+  if (!REF) setRef();
   const rng = rngFrom(seed), runs = [];
-  for (let i = 0; i < n; i++) runs.push(flatten(run(L, sampleParams(rng))));
-  const q = {}, keys = Object.keys(runs[0]);
-  const pick = (a, f) => a[Math.min(a.length - 1, Math.floor(f * a.length))];
-  for (const k of keys) {
+  for (let i = 0; i < n; i++) runs.push(flatten(run(L, fix ? Object.assign(sampleParams(rng), fix) : sampleParams(rng))));   // fix: hold named mechanisms at a value while the rest are drawn
+  const q = {}, pick = (a, f) => a[Math.min(a.length - 1, Math.floor(f * a.length))];
+  for (const k of Object.keys(runs[0])) {
     const v = runs[0][k];
-    if (typeof v === 'number') {
-      const a = runs.map(r => r[k]).sort((x, y) => x - y);
-      q[k] = [pick(a, 0.1), pick(a, 0.5), pick(a, 0.9), a.reduce((s, x) => s + x, 0) / n];
-    } else if (typeof v === 'string') {
-      const a = runs.map(r => r[k]).filter(x => /^\d{4}-/.test(x)).map(day).sort((x, y) => x - y);
-      q[k + '#share'] = [a.length / n];
-      if (a.length) q[k] = [iso(pick(a, 0.1)), iso(pick(a, 0.5)), iso(pick(a, 0.9))];
-    }
+    if (typeof v === 'number' || typeof v === 'boolean') { const a = runs.map(r => +r[k]).filter(Number.isFinite).sort((x, y) => x - y); if (a.length) q[k] = [pick(a, 0.1), pick(a, 0.5), pick(a, 0.9), a.reduce((s, x) => s + x, 0) / a.length]; }
+    else if (typeof v === 'string') { const a = runs.map(r => r[k]).filter(x => /^\d{4}-\d\d-\d\d$/.test(x)).map(day).sort((x, y) => x - y); q[k + '#share'] = [a.length / n]; if (a.length) q[k] = [iso(pick(a, 0.1)), iso(pick(a, 0.5)), iso(pick(a, 0.9))]; }
   }
   return q;
 }
-
-const M = { REAL, LEVERS_REAL, LEVERS_SCEN, PRIORS, sampleParams, run, monteCarlo, flatten, day, iso };
-if (typeof module !== 'undefined' && module.exports) module.exports = M; else root.HalifaxModel = M;
+function sensitivity(L, metric) {
+  if (!REF) setRef();
+  const base = sampleParams(null), b = metric(run(L, base)), rows = [];
+  for (const [k, v] of Object.entries(PRIORS)) rows.push({ k, lo: metric(run(L, Object.assign({}, base, { [k]: v[0] }))) - b, hi: metric(run(L, Object.assign({}, base, { [k]: v[1] }))) - b });
+  rows.sort((x, y) => Math.max(Math.abs(y.lo), Math.abs(y.hi)) - Math.max(Math.abs(x.lo), Math.abs(x.hi)));
+  return { base: b, rows };
+}
+const STEPS = [   // from reality to the scenario, one change at a time; the decision first, so that the later changes show what they add to its chances
+  ['Reality', {}], ['Moscow first in 1942, then the south', { moscow42: true, blueStart: 'after Moscow' }],
+  ['Invasion on 1 June', { start: '1941-06-01' }], ['Soviets alerted, 3.7m men in the west', { sMen: 3700, alert: 1 }],
+  ['More German men and tanks', { gMen: 3900, gTanks: 3800 }], ['Larger Luftwaffe', { gAirX: 1.5 }], ['German output and replacements', { gProdX: 1.3, gReplX: 1.25 }],
+  ['More lorries and fuel, net of the extra divisions', { lorries: 1.1, fuel: 1.05, railX: 1.0 }], ['No Lend-Lease', { lendLease: false, sProdX: 0.96 }], ['Far East forces held back', { farEastHeld: 0.5 }],
+];
+const M = { MONTHS, AXES, MILES, CAUC, K, PROD, START, LEVERS_REAL, LEVERS_SCEN, PRIORS, STEPS, sampleParams, run, setRef, monteCarlo, sensitivity, flatten, day, iso, getRef: () => REF };
+if (typeof module !== 'undefined' && module.exports) module.exports = M; else root.EFModel = M;
 })(typeof window !== 'undefined' ? window : globalThis);
