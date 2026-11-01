@@ -44,7 +44,8 @@ const K = {
     stalingrad: { pris: 40, kw: 30, g: 20 },      // the west bank cleared
     astrakhan: { pris: 25 }, grozny: { pris: 20 } },
   uranusFail: { s: 150, g: 60 },   // a counter-offensive that fails (Mars, Nov.–Dec. 1942, cost the Soviets some 215,000): its cost falls on the attacker, and the Germans are spared the losses of the encirclement   // thousands: a November counter-offensive that fails costs the Soviets, and spares the Germans the encirclement battles of December
-  lineBattle: 25,   // km of advance-equivalent for the pockets when a held line is broken on a broad front over a fortnight
+  lineBattle: 25,   // km of advance-equivalent for the losses when a held line is broken on a broad front over a fortnight: killed and wounded, not prisoners (the line is given up in order)
+  lugaPerDvina: 0.6, // weeks added to the Luga halt for each week the Dvina is held (the Soviet divisions arrive in order, with the mechanized corps and the KV deliveries)
   astrPace: 400, astrFlank: 0.1,   // the Astrakhan dash: km a month in dry weather for a motorized group; the share of the southern striking force it takes off the Don flank
   caucW: { '1942-10': 0.8, '1942-11': 0.5, '1942-12': 0.15 }, caucL: { '1942-10': 1, '1942-11': 0.6, '1942-12': 0.3 },   // lorry reach in the Caucasus by month   // the Caucasus' own weather once the branch has the south's whole effort
   caucShare: 0.75,                        // share of the southern supply reach that the Caucasus branch can use
@@ -133,7 +134,7 @@ function run(L, p) {
   // Each axis may have lines at which the advance stops: a held line (the levers), and on the north the Luga Line, where in reality Army Group
   // North halted from mid-July to 8 August to bring up infantry and supply before the final drive on Leningrad. Each line: km, days held, days of
   // reduction at half pace after it, and the pocket-equivalent of the troops destroyed when it breaks.
-  const LINES = { N: [{ km: 300, hold: 7 * (L.lineN || 0), red: 14, eq: K.lineBattle }, { km: 720, hold: K.lugaDays * p.luga, red: 14, eq: 0 }], C: [{ km: 500, hold: 7 * (L.lineC || 0), red: 14, eq: K.lineBattle }], S: [] };
+  const LINES = { N: [{ km: 300, hold: 7 * (L.lineN || 0), red: 14, eq: K.lineBattle }, { km: 720, hold: K.lugaDays * p.luga + 7 * K.lugaPerDvina * (L.lineN || 0), red: 14, eq: 0 }   /* the divisions saved on the Dvina man the Luga Line in order: each week held there lengthens the Luga halt */], C: [{ km: 500, hold: 7 * (L.lineC || 0), red: 14, eq: K.lineBattle }], S: [] };
   for (const a of AXES) for (const ln of LINES[a]) ln.hit = null;
   const lineFree = (t0, t1, a) => {   // fighting days in [t0, t1] on the axis, net of its lines' holds and reductions
     const ov = (x0, x1) => Math.max(0, Math.min(t1, x1) - Math.max(t0, x0)); let d = t1 - t0;
@@ -232,7 +233,7 @@ function run(L, p) {
       pace[a] = km;
       if (a === 'C' && yr === 1941 && !ev.Smolensk && m >= '1941-08' && depth.C + km >= 640) { const need = Math.max(0, 640 - depth.C); ev.Smolensk = dateIn(m, Math.min(1, need / Math.max(1, km))); km = need; }   // the Centre halts at Smolensk to recover, as it did
       if (a === 'N') {   // Leningrad is invested, not stormed; the drive on Tikhvin opens three weeks after Shlisselburg (16 Oct. in reality), with whatever of the month is left
-        const tk = ev.Shlisselburg ? day(ev.Shlisselburg) + 21 : Infinity, drive = yr === 1941 && m >= '1941-10' ? Math.max(0, Math.min(1, (mEnd - tk) / (mEnd - mStart))) : 0;
+        const tk = ev.Shlisselburg ? day(ev.Shlisselburg) + 21 : Infinity, drive = yr === 1941 && m >= '1941-10' && m <= '1941-11' ? Math.max(0, Math.min(1, (mEnd - tk) / (mEnd - mStart))) : 0;   /* the drive is over by December: winter and the Soviet counter-blows (Tikhvin was retaken on 9 Dec.) */
         if (depth.N >= 850 && drive > 0) km = K.paceK.N * K.driveN * drive * Math.max(seasonOf(a), K.driveFloor) * Math.pow(FR, 0.3) * dev(FR, REF && REF.FR[t], p.alpha - 0.3) * local;   // the drive on Tikhvin: a corps on one road, slowed but not stopped by the mud
         km = Math.min(km, Math.max(0, (drive > 0 ? K.capN : 850) - depth.N));
       }
@@ -252,7 +253,7 @@ function run(L, p) {
     }
     // ---- Soviet winter counter-offensive: ground regained on the Moscow axis
     let regain = 0;
-    if (winterOn && m >= '1941-12' && ev.Tikhvin && !ev.TikhvinRetaken && !ev.Leningrad) {   // Tikhvin: retaken if the Soviets are strong enough; else Leningrad starves
+    if (winterOn && m >= '1941-12' && ev.Tikhvin && ev.Tikhvin.slice(0, 7) < m && !ev.TikhvinRetaken && !ev.Leningrad) {   // Tikhvin: retaken if the Soviets are strong enough; else Leningrad starves
       if (sovOff && (sP / gP) >= (REF ? REF.R[t] : sP / gP) * p.tikhvin) { depth.N = 850; rail.N = Math.min(rail.N, 850); ev.TikhvinRetaken = m + '-09'; }
     }
     if (ev.Tikhvin && !ev.TikhvinRetaken && !ev.Leningrad) { siegeMonths += ev.Tikhvin.slice(0, 7) === m ? 1 - (+ev.Tikhvin.slice(8, 10) - 1) / monthDays(m) : 1; /* the Ladoga route is cut only while Tikhvin is held */ if (siegeMonths >= p.siege) { ev.Leningrad = m + '-15'; } }
@@ -262,14 +263,15 @@ function run(L, p) {
     const leak = (L.alert && t <= 1) ? 1 + L.alert * (p.alertLeak - 1) : 1;
     const sealLever = Math.pow(L.gMen / 3300, 0.4) * Math.pow(L.gAirX, 0.15);                 // the premise's extra men and aircraft
     const sealWear = Math.pow((G.men / 3300) / (L.gMen / 3300), 0.4);                          // the attrition since, as in reality
-    const advWw = AXES.reduce((acc, a) => acc + (adv[a] + lineEq[a]) * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);   // the men standing on each axis
+    const advWw = AXES.reduce((acc, a) => acc + adv[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);
+    const lineW = AXES.reduce((acc, a) => acc + lineEq[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);   // the broad-front battle for a held line: it costs the defender killed and wounded, in proportion to the men there, not a pocket   // the men standing on each axis
     let pris = K.pockets * S.men * (advWw / 400) * forward * sealWear * Math.pow(sealLever * (L.sovDepth && t <= 2 ? 0.7 : 1) / leak, p.pocketE) / Math.sqrt(sEff);   // better-led troops get more of themselves out of a pocket
     if (m === '1941-09' && L.kievWithdraw) pris *= 0.45;
     if (m === '1941-09' && !L.kievDiversion) pris *= 0.6;                            // no northern pincer: the Kiev pocket is far smaller
     if (m === '1942-05' && sovOff) pris += 240 * Math.pow(G.men / 3300, 0.5);          // the Kharkov offensive cut off at Izyum
     // ---- attrition
     const act = Math.max(0.35, Math.max(...Object.values(on)), sovOff ? 1 : 0, moscowOn ? 1 : 0) * intensity * frac;
-    let sKw = K.sCas * Math.pow(gP, 0.7) * dev(gP, REF && REF.gP[t], p.exchD) * act * (sovOff ? 1.6 : 1) * Math.pow(prep, 0.3) * (yr === 1942 && m >= '1942-06' ? K.sCas42X : 1);
+    let sKw = K.sCas * Math.pow(gP, 0.7) * dev(gP, REF && REF.gP[t], p.exchD) * act * (sovOff ? 1.6 : 1) * Math.pow(prep, 0.3) * (yr === 1942 && m >= '1942-06' ? K.sCas42X : 1) + K.pockets * S.men * (lineW / 400) * 0.5;
     let gCas = K.gCas * Math.pow(sP, 0.5) * dev(sP, REF && REF.sP[t], p.gExchD) * act * (sovOff ? 1.3 : 1) * ((L.alert && t <= 1) ? 1.15 : 1) / Math.pow(L.gAirX, 0.1) * Math.pow(G.men / 3300, 0.4) * (yr === 1942 && m >= '1942-06' ? K.gCas42X : 1) / Math.pow(prep, 0.3);   // stronger defences cost the attacker (the month's ordinary attrition already runs at full intensity; the battle's own bill is added below)
     const sTl = S.tanks * K.sTank[yr] * act + 0.5 * pris;
     const gTl = G.tanks * K.gTank * act * Math.pow(sP, 0.3);
