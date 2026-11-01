@@ -176,7 +176,7 @@ const RU = {
   'method.note': 'Независимая проверка этой версии нашла, а я исправил: московская оборона увеличивала советские, а не германские потери; германские потери при наступлении на Москву были занижены; танки «Центра» в сентябре считались одновременно на юге и под Москвой; люфтваффе под Сталинградом считалось дважды, а давление продолжало накапливаться после ноября; «Блау» могла начаться в мае или никогда; один диапазон неопределённости просачивался в реальный прогон. Калибровка: реальный прогон совпадает с реальными датами Минска, Смоленска, Вязьмы, Киева, Харькова, Ростова, Даугавпилса, Пскова, Шлиссельбурга, Тихвина, Воронежа, выхода к Волге, Майкопа и Моздока с точностью от нескольких дней до трёх недель; глубины декабря 1941 и 1942, советские и германские потери, пленные, потери и численность танков и самолётов — с точностью около 12%. Два суждения ни по чему не калиброваны: докуда дошло бы подготовленное наступление на Москву в 1942 (задано так, чтобы реальная германская армия 1942 года при обороне по умолчанию добивалась успеха примерно в половине случаев) и порог, при котором Москва падает в 1941 (80 км за реальной точкой остановки). Модель не берёт Ленинград штурмом и не принимает решений; решения — это рычаги.',
   // generated text (by English string)
   'Running…': 'Расчёт…', '{n} runs in {ms} ms': '{n} прогонов за {ms} мс', 'Custom': 'Своя настройка', 'Scenario': 'Сценарий', 'Reality': 'Реальность',
-  'Play': 'Пуск', 'Stop': 'Стоп', 'frontier': 'граница', 'To Leningrad': 'На Ленинград', 'To Moscow': 'На Москву', 'To Stalingrad': 'На Сталинград', 'Caucasus, from Rostov': 'Кавказ, от Ростова',
+  'Play': 'Пуск', 'Stop': 'Стоп', 'frontier': 'граница', 'North': 'Север', 'Centre': 'Центр', 'South': 'Юг', 'Caucasus, from Rostov': 'Кавказ, от Ростова',
   'Model {km} km ({lo}–{hi})': 'Модель {km} км ({lo}–{hi})', '{km} km': '{km} км', 'Reality {km} km': 'Реальность {km} км',
   'Start and the Soviet side': 'Начало войны и советская сторона', 'German strength and supply': 'Германские силы и снабжение', 'German decisions': 'Германские решения',
   'Invasion begins': 'Начало вторжения', '1 June 1941': '1 июня 1941', '22 June 1941': '22 июня 1941',
@@ -350,7 +350,7 @@ const tip = document.getElementById('tip'); function showTip(e, html) { tip.inne
 const NS = 'http://www.w3.org/2000/svg'; function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const [a, v] of Object.entries(attrs)) e.setAttribute(a, v); if (parent) parent.appendChild(e); return e; }
 let QCUR = null, mIdx = 6, playing = null;
 function frontChart(Q) { QCUR = Q; roads(); }
-const ROADS = [['N', 'To Leningrad', 1000], ['C', 'To Moscow', 1200], ['S', 'To Stalingrad', 1800]];
+const ROADS = [['N', 'North', 1000], ['C', 'Centre', 1200], ['S', 'South', 1800]];
 function roads() {
   if (!QCUR) return; const Q = QCUR, i = mIdx, m = M.MONTHS[i];
   document.getElementById('mLabel').textContent = monthLabel(m);
