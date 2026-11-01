@@ -291,7 +291,9 @@ function monteCarlo(L, n = 800, seed = 1941, fix = null) {
   for (const k of keys) {
     const v = runs.find(r => r[k] != null)[k];
     if (typeof v === 'number' || typeof v === 'boolean') { const a = runs.map(r => +r[k]).filter(Number.isFinite).sort((x, y) => x - y); if (a.length) q[k] = [pick(a, 0.1), pick(a, 0.5), pick(a, 0.9), a.reduce((s, x) => s + x, 0) / a.length]; }
-    else if (typeof v === 'string') { const a = runs.map(r => r[k]).filter(x => /^\d{4}-\d\d-\d\d$/.test(x)).map(day).sort((x, y) => x - y); q[k + '#share'] = [a.length / n]; if (a.length) q[k] = [iso(pick(a, 0.1)), iso(pick(a, 0.5)), iso(pick(a, 0.9))]; }
+    else if (typeof v === 'string') { const a = runs.map(r => r[k]).filter(x => /^\d{4}-\d\d-\d\d$/.test(x)).map(day).sort((x, y) => x - y); q[k + '#share'] = [a.length / n]; if (a.length) q[k] = [iso(pick(a, 0.1)), iso(pick(a, 0.5)), iso(pick(a, 0.9))];
+      const a41 = a.filter(d => d < day('1942-01-01')); if (a41.length && a41.length < a.length) q[k + '#split'] = [a41.length / n, iso(pick(a41, 0.1)), iso(pick(a41, 0.5)), iso(pick(a41, 0.9)), iso(pick(a.slice(a41.length), 0.5))];   // an event that falls in 1941 in some runs and 1942 in others: the 1941 share and dates, and the median of the rest
+    }
   }
   return q;
 }
