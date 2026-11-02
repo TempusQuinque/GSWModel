@@ -44,6 +44,7 @@ const K = {
     stalingrad: { pris: 40, kw: 30, g: 20 },      // the west bank cleared
     astrakhan: { pris: 25 }, grozny: { pris: 20 } },
   uranusFail: { s: 150, g: 60 },   // a counter-offensive that fails (Mars, Nov.–Dec. 1942, cost the Soviets some 215,000): its cost falls on the attacker, and the Germans are spared the losses of the encirclement   // thousands: a November counter-offensive that fails costs the Soviets, and spares the Germans the encirclement battles of December
+  airDim: { move: 0.6, stand: 0.85 },   // diminishing returns on the Luftwaffe lever: lever^0.6 while the front moves (June–Sept. 1941, July–Aug. 1942), lever^0.85 when it stands
   goldFrom: 10, goldProd: 1.03, goldPocket: 0.95, goldRes: 1.03,   // gold purchases through the Pacific: from April 1942 (orders of mid-1941), output ×1.03, pockets ×0.95 (trucks), Don reserves ×1.03 (rail stock)
   lineBattle: 25,   // km of advance-equivalent for the losses when a held line is broken on a broad front over a fortnight: killed and wounded, not prisoners (the line is given up in order)
   astrPace: 400, astrFlank: 0.1,   // the Astrakhan dash: km a month in dry weather for a motorized group; the share of the southern striking force it takes off the Don flank
@@ -120,6 +121,11 @@ const dev = (v, ref, e) => (REF && ref > 0) ? Math.pow(v / ref, e) : 1;
 // ------------------------------------------------------------------ the model
 function run(L, p) {
   const o = { levers: L.label, months: [] };
+  // more aircraft in the east give less than their number: forward airfields, fuel transport and ground crews set the sortie rate, not airframes.
+  // G.air counts airframes; what they are worth each month is airframes × gAirX^(dim−1), with dim = K.airDim.move while the front is moving (the
+  // ground organization lags the panzers) and K.airDim.stand when it stands (sieges, the winter: the airfields have caught up)
+  const MOVING = new Set(['1941-06', '1941-07', '1941-08', '1941-09', '1942-07', '1942-08']);
+  const airUse = m => Math.pow(L.gAirX, (MOVING.has(m) ? K.airDim.move : K.airDim.stand) - 1);
   let G = { men: L.gMen, tanks: L.gTanks, air: START.gAir * L.gAirX };
   let S = { men: L.sMen, tanks: START.sTanks, air: START.sAir };
   const depth = { N: 0, C: 0, S: 0 }, rail = { N: 0, C: 0, S: 0 }, reach = { N: 0, C: 0, S: 0 };
@@ -157,7 +163,8 @@ function run(L, p) {
     const mStart = day(m + '-01'), mEnd = mStart + monthDays(m);
     const seasonOf = a => (a === 'S' && K.seasonS[m] != null) ? K.seasonS[m] : season;
     const sMen0 = S.men;
-    const gP = comp(G.men / 3300, G.tanks / 3600, G.air / 2800, GWT);
+    const airX = airUse(m);
+    const gP = comp(G.men / 3300, G.tanks / 3600, G.air * airX / 2800, GWT);
     const sEff = L.sEff || 1;   // the fighting value of the Soviet forces per man, tank and aircraft, relative to 1941–42 (about 1.5 for the army of 1944)
     const sP = comp(S.men / 2900, Math.max(0.05, S.tanks / 22600), Math.max(0.05, S.air / 20000), SWT) * sEff;
     const FR = gP / sP;
@@ -269,7 +276,7 @@ function run(L, p) {
     // ---- pockets
     const forward = yr === 1941 ? 1 : 0.75;
     const leak = (L.alert && t <= 1) ? 1 + L.alert * (p.alertLeak - 1) : 1;
-    const sealLever = Math.pow(L.gMen / 3300, 0.4) * Math.pow(L.gAirX, 0.15);                 // the premise's extra men and aircraft
+    const sealLever = Math.pow(L.gMen / 3300, 0.4) * Math.pow(L.gAirX * airX, 0.15);                 // the premise's extra men and aircraft
     const sealWear = Math.pow((G.men / 3300) / (L.gMen / 3300), 0.4);                          // the attrition since, as in reality
     const advWw = AXES.reduce((acc, a) => acc + adv[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);
     const lineW = AXES.reduce((acc, a) => acc + lineEq[a] * ({ N: 0.25, C: 0.4, S: 0.35 })[a] * wgt(a), 0);   // the broad-front battle for a held line: it costs the defender killed and wounded, in proportion to the men there, not a pocket   // the men standing on each axis
@@ -281,11 +288,11 @@ function run(L, p) {
     // ---- attrition
     const act = Math.max(0.35, Math.max(...Object.values(on)), sovOff ? 1 : 0, moscowOn ? 1 : 0) * intensity * frac;
     let sKw = K.sCas * Math.pow(gP, 0.7) * dev(gP, REF && REF.gP[t], p.exchD) * act * (sovOff ? 1.6 : 1) * Math.pow(prep, 0.3) * (yr === 1942 && m >= '1942-06' ? K.sCas42X : 1) + K.pockets * S.men * (lineW / 400) * 0.5;
-    let gCas = K.gCas * Math.pow(sP, 0.5) * dev(sP, REF && REF.sP[t], p.gExchD) * act * (sovOff ? 1.3 : 1) * ((L.alert && t <= 1) ? 1.15 : 1) / Math.pow(L.gAirX, 0.1) * Math.pow(G.men / 3300, 0.4) * (yr === 1942 && m >= '1942-06' ? K.gCas42X : 1) / Math.pow(prep, 0.3);   // stronger defences cost the attacker (the month's ordinary attrition already runs at full intensity; the battle's own bill is added below)
+    let gCas = K.gCas * Math.pow(sP, 0.5) * dev(sP, REF && REF.sP[t], p.gExchD) * act * (sovOff ? 1.3 : 1) * ((L.alert && t <= 1) ? 1.15 : 1) / Math.pow(L.gAirX * airX, 0.1) * Math.pow(G.men / 3300, 0.4) * (yr === 1942 && m >= '1942-06' ? K.gCas42X : 1) / Math.pow(prep, 0.3);   // stronger defences cost the attacker (the month's ordinary attrition already runs at full intensity; the battle's own bill is added below)
     const sTl = S.tanks * K.sTank[yr] * act + 0.5 * pris;
     const gTl = G.tanks * K.gTank * act * Math.pow(sP, 0.3);
     const groundAir = (t === 0 && L.alert) ? 1 - L.alert * (1 - p.alertAir) : 1;
-    const sAl = S.air * K.sAir[yr] * act * (t === 0 ? 1.5 * groundAir : 1) * Math.pow(L.gAirX, 0.4);
+    const sAl = S.air * K.sAir[yr] * act * (t === 0 ? 1.5 * groundAir : 1) * Math.pow(L.gAirX * airX, 0.4);
     const gAl = G.air * K.gAir * act * Math.pow(sP, 0.3);
     // ---- events
     if (moscowOn) { effort += (m === '1942-05' ? 0.35 : 1); if (depth.C >= L.moscowKm) moscowOn = false; else if (effort >= p.culm) { ev.MoscowSpent = m + '-28'; moscowOn = false; } }   // (the losses of success or failure are added below, in the month of the event)
